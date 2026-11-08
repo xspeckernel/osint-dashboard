@@ -507,7 +507,17 @@ $("#emailTrackerExport")?.addEventListener("click",()=>{
 $("#searchForm").addEventListener("submit", event => {
   event.preventDefault(); runAnalysis($("#targetInput").value);
 });
-document.querySelectorAll("[data-nav]").forEach(button => button.addEventListener("click", () => switchView(button.dataset.nav)));
+const mobileMenuBtn = $("#mobileMenuBtn");
+const sidebarBackdrop = $("#sidebarBackdrop");
+function setMobileMenu(open) {
+  document.body.classList.toggle("sidebar-open", open);
+  mobileMenuBtn?.setAttribute("aria-expanded", String(open));
+  mobileMenuBtn?.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+  if (mobileMenuBtn) mobileMenuBtn.textContent = open ? "×" : "☰";
+}
+mobileMenuBtn?.addEventListener("click", () => setMobileMenu(!document.body.classList.contains("sidebar-open")));
+sidebarBackdrop?.addEventListener("click", () => setMobileMenu(false));
+document.querySelectorAll("[data-nav]").forEach(button => button.addEventListener("click", () => { switchView(button.dataset.nav); setMobileMenu(false); }));
 document.querySelectorAll(".tab-button[data-tab]").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
 $("#newInvestigationBtn")?.addEventListener("click", () => { switchView("overview"); $("#targetInput").focus(); });
 
