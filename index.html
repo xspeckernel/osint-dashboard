@@ -170,14 +170,12 @@
       </section>
 
       <section class="module-panel tracker-panel" id="panel-geoint">
-        <div class="module-heading"><div><div class="eyebrow">GEOINT / VISUAL LANDMARK RESEARCH</div><h2>Image Location Analysis</h2><p>Organize visual clues from a photo of a public place or landmark.</p></div><span class="subtle-tag">AI VISION · PUBLIC LANDMARKS</span></div>
+        <div class="module-heading"><div><div class="eyebrow">GEOINT / VISUAL LANDMARK RESEARCH</div><h2>Image Location Analysis</h2><p>Envie uma imagem e clique em analisar para procurar um ponto de referência público.</p></div><span class="subtle-tag">AI VISION · PUBLIC LANDMARKS</span></div>
         <article class="panel-card tracker-card">
           <div class="geoint-upload"><label for="geointImage">Selecionar foto de um ponto de referência público</label><input id="geointImage" type="file" accept="image/jpeg,image/png,image/webp"><small>A imagem só será enviada ao serviço de IA quando você clicar em analisar. Não é armazenada pelo TRACE.</small></div>
           <div id="geointPreview" class="geoint-preview"><div class="compact-empty">A prévia da imagem aparecerá aqui.</div></div>
           <form id="geointForm" class="tracker-form geoint-form">
-            <label for="geointClues">Pistas visuais observadas</label>
-            <textarea id="geointClues" maxlength="500" rows="4" placeholder="Ex.: arquitetura colonial, placas públicas, montanhas ao fundo, idioma das placas, monumento..." required></textarea>
-            <button class="primary-button" id="geointAnalyzeBtn" type="submit">ANALISAR IMAGEM ↗</button>
+<button class="primary-button" id="geointAnalyzeBtn" type="submit">ANALISAR IMAGEM ↗</button>
           </form>
           <div id="geointResults" class="tracker-results"><div class="compact-empty">Envie uma foto de um monumento, parque ou outro ponto público para começar.</div></div>
         </article>
