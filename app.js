@@ -402,14 +402,35 @@ function renderGeointResult(result) {
     return;
   }
   const location=[result.city,result.region,result.country].filter(Boolean).map(escapeHtml).join(", ");
-  let mapHtml='<div class="compact-empty">Não foi possível confirmar uma posição cartográfica para este marco.</div>';
+  let mapSection='<div class="compact-empty">Não foi possível confirmar uma posição cartográfica para este marco.</div>';
   if(result.map&&Number.isFinite(result.map.lat)&&Number.isFinite(result.map.lon)){
-    const lat=result.map.lat,lon=result.map.lon,delta=.006;
+    const lat=result.map.lat,lon=result.map.lon,delta=.008;
     const bbox=[lon-delta,lat-delta,lon+delta,lat+delta].join("%2C");
-    const src="https://www.openstreetmap.org/export/embed.html?bbox="+bbox+"&layer=mapnik&marker="+lat+"%2C"+lon;
-    mapHtml='<iframe class="geoint-map" title="Mapa do ponto de referência público" loading="lazy" referrerpolicy="no-referrer" src="'+src+'"></iframe><a class="tracker-source-link" href="'+escapeHtml(result.map.osm)+'" target="_blank" rel="noopener noreferrer"><span><b>Abrir mapa ampliado</b><small>OpenStreetMap · posição aproximada do marco público</small></span><em>ABRIR ↗</em></a>';
+    const map2d="https://www.openstreetmap.org/export/embed.html?bbox="+bbox+"&layer=mapnik&marker="+lat+"%2C"+lon;
+    const earth="https://earth.google.com/web/search/"+encodeURIComponent(result.landmark+" "+result.city);
+    const street="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="+lat+","+lon;
+    mapSection='<div class="geoint-place-chips"><span class="geoint-place-chip active"><b>1</b>'+escapeHtml(result.city)+', '+escapeHtml(result.country)+'</span></div>'+
+      '<div class="geoint-map-tabs" role="tablist" aria-label="Visualização do mapa">'+
+      '<button type="button" class="active" data-geoint-map="2d">▱ Mapa 2D</button>'+
+      '<button type="button" data-geoint-map="3d">◇ Mapa 3D ↗</button>'+
+      '<button type="button" data-geoint-map="street">◉ Street View ↗</button></div>'+
+      '<div class="geoint-map-stage" id="geointMapStage"><iframe class="geoint-map" title="Mapa 2D do ponto de referência público" loading="lazy" referrerpolicy="no-referrer" src="'+map2d+'"></iframe></div>'+
+      '<div class="geoint-map-caption"><span>●</span><b>'+escapeHtml(result.landmark)+'</b><small>'+location+'</small></div>'+
+      '<div class="geoint-map-links"><a href="'+earth+'" target="_blank" rel="noopener noreferrer">Abrir visualização 3D no Google Earth ↗</a><a href="'+street+'" target="_blank" rel="noopener noreferrer">Verificar Street View no Google Maps ↗</a></div>';
   }
-  el.innerHTML='<div class="tracker-result-summary"><b>'+escapeHtml(result.landmark)+'</b><small>'+location+'</small><small>Confiança estimada: '+escapeHtml(result.confidence||"não informada")+'</small><p>'+escapeHtml(result.reason||"Resultado automático sujeito a confirmação.")+'</p></div><div class="geoint-map-wrap"><div class="panel-kicker">MAPA DO PONTO PÚBLICO</div>'+mapHtml+'</div><p class="module-footnote">Resultado automatizado, não uma confirmação. Confira o marco em fontes independentes.</p>';
+  el.innerHTML='<div class="geoint-result-summary"><b>'+escapeHtml(result.landmark)+'</b><small>'+location+'</small><small>Confiança estimada: '+escapeHtml(result.confidence||"não informada")+'</small><p>'+escapeHtml(result.reason||"Resultado automatizado sujeito a confirmação.")+'</p></div><div class="geoint-map-wrap"><div class="panel-kicker">LOCALIZAÇÃO SUGERIDA</div>'+mapSection+'</div><p class="module-footnote">A posição representa uma correspondência cartográfica aproximada do ponto público, não o local exato de captura da foto. Confirme em fontes independentes.</p>';
+  const stage=$("#geointMapStage");
+  el.querySelectorAll("[data-geoint-map]").forEach(button=>button.addEventListener("click",()=>{
+    el.querySelectorAll("[data-geoint-map]").forEach(item=>item.classList.toggle("active",item===button));
+    const mode=button.dataset.geointMap;
+    if(mode==="2d"){
+      stage.innerHTML='<iframe class="geoint-map" title="Mapa 2D do ponto de referência público" loading="lazy" referrerpolicy="no-referrer" src="'+map2d+'"></iframe>';
+    }else{
+      const target=mode==="3d"?earth:street;
+      const title=mode==="3d"?"Visualização 3D":"Street View";
+      stage.innerHTML='<div class="geoint-external-view"><b>'+title+'</b><p>Esta visualização é aberta no serviço de mapas correspondente. A disponibilidade depende da cobertura da região.</p><a href="'+target+'" target="_blank" rel="noopener noreferrer">Abrir '+title+' ↗</a></div>';
+    }
+  }));
 }
 async function fileToDataUrl(file) {
   return new Promise((resolve,reject)=>{
