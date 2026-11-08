@@ -12,3 +12,19 @@
 .framework-item b{font-size:13px}.framework-item span{font-size:11px;line-height:1.5;color:var(--muted);flex:1}.framework-item em{font:9px var(--mono);font-style:normal;color:var(--blue2);letter-spacing:.6px}
 .infra-map{display:grid;gap:12px}.infra-root{padding:15px;border:1px solid #31517b;background:#122139;border-radius:8px;text-align:center}.infra-root small,.infra-node small{display:block;font:9px var(--mono);color:#93a8c3;letter-spacing:.8px;margin-bottom:5px}.infra-root b{font:13px var(--mono);overflow-wrap:anywhere}.infra-branch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.infra-node{padding:13px;border:1px solid var(--line);border-radius:8px;background:#0d141e;min-width:0}.infra-node b{font:10px var(--mono);overflow-wrap:anywhere;color:#d9e5f5}.infra-node p{font-size:10px;color:var(--muted);overflow-wrap:anywhere;margin:7px 0 0}
 @media(max-width:700px){.framework-grid,.infra-branch{grid-template-columns:1fr}}
+
+/* View switching: hide dashboard overview chrome outside the overview */
+.dashboard-overview-only{display:none!important}
+body[data-view="overview"] .dashboard-overview-only{display:flex!important}
+body[data-view="overview"] .stats-grid.dashboard-overview-only{display:grid!important}
+body[data-view="overview"] .dashboard-grid.dashboard-overview-only{display:grid!important}
+body[data-view="overview"] .tabs-row.dashboard-overview-only{display:flex!important}
+.framework-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px}
+.framework-toolbar b,.framework-toolbar small{display:block}
+.framework-toolbar b{font-size:13px}.framework-toolbar small{font-size:11px;color:var(--muted);margin-top:4px}
+.framework-open-link{white-space:nowrap;text-decoration:none;color:#fff;background:var(--blue);border-radius:6px;padding:9px 12px;font:9px var(--mono);letter-spacing:.4px}
+.framework-open-link:hover{filter:brightness(1.12)}
+.framework-frame-wrap{width:100%;height:min(78vh,900px);min-height:560px;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#1b1b1b}
+.framework-frame{display:block;width:100%;height:100%;border:0;background:#1b1b1b}
+.framework-fallback{margin:10px 0 0;color:var(--muted);font-size:10px}
+@media(max-width:600px){.framework-toolbar{align-items:flex-start;flex-direction:column}.framework-frame-wrap{min-height:520px;height:72vh}}
