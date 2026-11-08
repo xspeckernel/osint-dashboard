@@ -194,3 +194,12 @@ body[data-view="overview"] .tabs-row.dashboard-overview-only{display:flex!import
   .overview-grid,.tracker-metrics{grid-template-columns:1fr}
   .top-title h1{font-size:16px}
 }
+
+.geoint-map-wrap{display:grid;gap:10px;margin-top:18px}
+.geoint-map{display:block;width:100%;height:320px;border:1px solid var(--line);border-radius:9px;background:#0d141e}
+.geoint-result-map{display:grid;gap:10px}
+.geoint-result-summary{display:grid;gap:7px;padding:14px;border:1px solid #29466a;background:#101c2c;border-radius:8px}
+.geoint-result-summary>b{font-size:14px;color:#e8f1ff}
+.geoint-result-summary>small{font-size:10px;color:#a7b6ca;line-height:1.5}
+.geoint-result-summary>p{margin:3px 0 0;font-size:11px;color:#aebbd0;line-height:1.6}
+@media(max-width:600px){.geoint-map{height:260px}.geoint-upload input{font-size:10px}}
