@@ -318,7 +318,7 @@ function renderThreatIntel() {
  el.innerHTML=links.map(x=>`<a class="threat-link" href="${x[2]}" target="_blank" rel="noopener noreferrer"><b>${x[0]}</b><span>${x[1]}</span><em>ABRIR CONSULTA ↗</em></a>`).join("");
 }
 function confidenceData(){
- const parts=[["RDAP",!!state.rdap],["GEOIP",!!state.ipInfo],["DNS",state.dns.some(x=>x.Answer?.length)],["CERTIFICADOS",state.certs.length>0],["SPF / DMARC",!!state.mailSecurity]];
+ const parts=[["RDAP",!!state.rdap],["GEOIP",!!state.ipInfo],["DNS",state.dns.some(x=>x.Answer?.length)],["CERTIFICADOS",state.certs.length>0],["SPF / DMARC",state.dns.some(x=>x.typeName==="TXT"&&(x.Answer||[]).some(a=>/^v=spf1/i.test(a.data||""))) || !!state.mailSecurity?.dmarc?.Answer?.length]];
  const available=parts.filter(x=>x[1]).length;return {parts,score:Math.round(available/parts.length*100)};
 }
 function renderConfidence(){
