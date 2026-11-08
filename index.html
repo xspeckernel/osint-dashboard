@@ -32,6 +32,7 @@
         <button class="nav-item" data-nav="evidence"><span class="nav-icon">▤</span> Evidence Center</button>
         <button class="nav-item" data-nav="nametracker"><span class="nav-icon">⌕</span> Name Tracker</button>
         <button class="nav-item" data-nav="emailtracker"><span class="nav-icon">✉</span> Email Tracker</button>
+        <button class="nav-item" data-nav="geoint"><span class="nav-icon">⌖</span> GEOINT / Image Analysis</button>
         <button class="nav-item" data-nav="certs"><span class="nav-icon">◉</span> Certificados</button>
         <button class="nav-item" data-nav="dns"><span class="nav-icon">▤</span> Registros DNS</button>
         <button class="nav-item" data-nav="notes"><span class="nav-icon">▧</span> Relatórios e notas <span class="nav-count" id="noteCount">0</span></button>
@@ -164,6 +165,21 @@
           <div class="tracker-actions"><button class="outline-button" id="emailTrackerExport" type="button" disabled>EXPORTAR RESULTADO JSON</button></div>
         </article>
         <p class="module-footnote">O TRACE consulta MX, SPF e DMARC do domínio. Não tenta autenticar, enviar mensagens, descobrir contas vinculadas, consultar vazamentos ou identificar o titular do endereço. O email digitado não é salvo no histórico nem no localStorage.</p>
+      </section>
+
+      <section class="module-panel tracker-panel" id="panel-geoint">
+        <div class="module-heading"><div><div class="eyebrow">GEOINT / VISUAL LANDMARK RESEARCH</div><h2>Image Location Analysis</h2><p>Organize visual clues from a photo of a public place or landmark.</p></div><span class="subtle-tag">LOCAL IMAGE PREVIEW</span></div>
+        <article class="panel-card tracker-card">
+          <div class="geoint-upload"><label for="geointImage">Selecionar imagem de um local público</label><input id="geointImage" type="file" accept="image/jpeg,image/png,image/webp"><small>A imagem é pré-visualizada neste navegador e não é enviada pelo TRACE.</small></div>
+          <div id="geointPreview" class="geoint-preview"><div class="compact-empty">A prévia da imagem aparecerá aqui.</div></div>
+          <form id="geointForm" class="tracker-form geoint-form">
+            <label for="geointClues">Pistas visuais observadas</label>
+            <textarea id="geointClues" maxlength="500" rows="4" placeholder="Ex.: arquitetura colonial, placas públicas, montanhas ao fundo, idioma das placas, monumento..." required></textarea>
+            <button class="primary-button" type="submit">PESQUISAR PISTAS ↗</button>
+          </form>
+          <div id="geointResults" class="tracker-results"><div class="compact-empty">Descreva pistas visuais para preparar pesquisas em fontes públicas.</div></div>
+        </article>
+        <p class="module-footnote">Esta versão não usa reconhecimento visual automático nem promete identificar o local. Ela ajuda a estruturar pistas e pesquisar referências públicas. Não use para descobrir residências, rotinas ou a localização de pessoas privadas. Reconhecimento automático exigiria um serviço de visão com chave protegida em backend.</p>
       </section>
       <footer class="app-footer"><span>TRACE INTELLIGENCE PLATFORM <b>·</b> BUILD 2.0</span><span>Dados públicos · Consultas passivas · Sem varredura ativa</span></footer>
     </main>
