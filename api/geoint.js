@@ -24,9 +24,19 @@ export default async function handler(req, res) {
         }]
       })
     });
-    const payload = await response.json();
+    const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return res.status(502).json({ error: "O serviço de análise não respondeu. Tente novamente mais tarde." });
+      console.error("TRACE GEOINT OpenAI error:", response.status, payload?.error?.code || payload?.error?.type || "unknown");
+      if (response.status === 401) {
+        return res.status(502).json({ error: "A chave da OpenAI é inválida, foi revogada ou não está configurada corretamente na Vercel. Confira OPENAI_API_KEY e faça um novo deploy." });
+      }
+      if (response.status === 429) {
+        return res.status(502).json({ error: "A API da OpenAI está sem cota disponível ou atingiu um limite. Confira o faturamento e os limites da API." });
+      }
+      if (response.status === 400) {
+        return res.status(502).json({ error: "A OpenAI recusou o formato da solicitação ou da imagem. Tente uma imagem JPG ou PNG menor." });
+      }
+      return res.status(502).json({ error: "A OpenAI retornou um erro (HTTP " + response.status + "). Confira os logs da função GEOINT na Vercel." });
     }
     const text = payload.output?.flatMap(item => item.content || []).find(item => item.type === "output_text")?.text || "";
     const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, "").trim());
