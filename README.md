@@ -51,3 +51,11 @@ osint-dashboard/
 ├── app.js
 └── README.md
 ```
+
+
+## Name Tracker e Email Tracker
+
+- **Name Tracker:** prepara links de pesquisa em notícias, fontes institucionais e publicações acadêmicas. A pesquisa é aberta nos serviços externos e não confirma identidade.
+- **Email Tracker:** valida a sintaxe do endereço e consulta MX, TXT/SPF e DMARC do domínio via Cloudflare DNS-over-HTTPS. Não verifica se a caixa postal existe nem identifica seu titular.
+- O endereço informado no Email Tracker não é adicionado ao histórico nem armazenado no localStorage. A exportação JSON é manual e local.
+- Os módulos não consultam contas privadas, credenciais ou bases de vazamentos e não realizam tentativas de autenticação.
