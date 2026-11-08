@@ -142,7 +142,7 @@ function renderCerts() {
 function renderStats() {
   $("#statRdap").textContent = state.rdap ? "OK" : "—";
   $("#rdapSub").textContent = state.rdap ? "Resposta recebida" : "Sem resposta";
-  renderDns(); renderCerts(); renderRdap(); renderOverview(); updateTargetHeader();
+  renderDns(); renderCerts(); renderRdap(); renderOverview(); updateTargetHeader(); renderInfrastructure();
 }
 async function analyzeDomain(target) {
   const jobs = await Promise.allSettled([
