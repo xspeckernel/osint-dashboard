@@ -6,8 +6,8 @@ export default async function handler(req, res) {
 
   try {
     const { image, clues = "" } = req.body || {};
-    if (typeof image !== "string" || !/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 8_500_000) {
-      return res.status(400).json({ error: "Envie uma imagem JPG, PNG ou WebP de até 6 MB." });
+    if (typeof image !== "string" || !/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 4_200_000) {
+      return res.status(400).json({ error: "Envie uma imagem JPG, PNG ou WebP de até 3 MB." });
     }
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
