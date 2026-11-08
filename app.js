@@ -224,12 +224,18 @@ function renderInfrastructure() {
 }
 function switchView(view) {
   const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
-  document.querySelectorAll(".nav-item[data-nav]").forEach(button => button.classList.toggle("active", button.dataset.nav === view));
+  document.body.dataset.view = view;
+  document.querySelectorAll(".nav-item[data-nav]").forEach(button => {
+    const active = button.dataset.nav === view;
+    button.classList.toggle("active", active);
+    if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
+  });
   document.querySelectorAll(".tab-button[data-tab]").forEach(button => button.classList.toggle("active", button.dataset.tab === view));
   document.querySelectorAll(".tab-panel, .module-panel").forEach(panel => panel.classList.toggle("active", panel.id === `panel-${view}`));
   $("#crumbCurrent").textContent = names[view] || "TRACE";
   if (view === "investigations") renderInvestigations();
   if (view === "infrastructure") renderInfrastructure();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 function switchTab(tab) { switchView(tab); }
 function saveNotes() {
