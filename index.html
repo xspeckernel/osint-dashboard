@@ -20,13 +20,13 @@
       </a>
       <div class="side-label">WORKSPACE</div>
       <nav class="nav" aria-label="Navegação principal">
-        <button class="nav-item active" data-tab="overview"><span class="nav-icon">▦</span> Dashboard</button>
-        <button class="nav-item" data-tab="overview"><span class="nav-icon">▱</span> Investigações</button>
-        <button class="nav-item" data-tab="dns"><span class="nav-icon">⌕</span> OSINT Framework</button>
-        <button class="nav-item" data-tab="overview"><span class="nav-icon">⌘</span> Mapa de infraestrutura</button>
-        <button class="nav-item" data-tab="certs"><span class="nav-icon">◉</span> Certificados</button>
-        <button class="nav-item" data-tab="dns"><span class="nav-icon">▤</span> Registros DNS</button>
-        <button class="nav-item" data-tab="notes"><span class="nav-icon">▧</span> Relatórios e notas <span class="nav-count" id="noteCount">0</span></button>
+        <button class="nav-item active" data-nav="overview"><span class="nav-icon">▦</span> Dashboard</button>
+        <button class="nav-item" data-nav="investigations"><span class="nav-icon">▱</span> Investigações</button>
+        <button class="nav-item" data-nav="framework"><span class="nav-icon">⌕</span> OSINT Framework</button>
+        <button class="nav-item" data-nav="infrastructure"><span class="nav-icon">⌘</span> Mapa de infraestrutura</button>
+        <button class="nav-item" data-nav="certs"><span class="nav-icon">◉</span> Certificados</button>
+        <button class="nav-item" data-nav="dns"><span class="nav-icon">▤</span> Registros DNS</button>
+        <button class="nav-item" data-nav="notes"><span class="nav-icon">▧</span> Relatórios e notas <span class="nav-count" id="noteCount">0</span></button>
       </nav>
       <div class="side-label tools-label">DATA SOURCES</div>
       <div class="source-links">
@@ -103,6 +103,32 @@
       <section class="tab-panel" id="panel-dns"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">DNS / RECORDS</span><h2>Registros encontrados</h2><p>Respostas obtidas por DNS-over-HTTPS.</p></div><span class="subtle-tag" id="dnsCount">0 REGISTROS</span></div><div id="dnsResults" class="table-wrap"><div class="empty-state compact"><b>Sem dados DNS</b><p>Faça uma consulta de domínio para carregar os registros.</p></div></div></article></section>
       <section class="tab-panel" id="panel-certs"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">CERTIFICATE TRANSPARENCY</span><h2>Certificados públicos</h2><p>Entradas públicas relacionadas ao domínio consultado.</p></div><span class="subtle-tag" id="certCount">0 ENTRADAS</span></div><div id="certResults" class="cert-list"><div class="empty-state compact"><b>Sem certificados</b><p>Faça uma consulta de domínio para buscar entradas públicas.</p></div></div></article></section>
       <section class="tab-panel" id="panel-notes"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">CASE NOTES</span><h2>Caderno de investigação</h2><p>Anotações salvas somente neste navegador.</p></div></div><form id="noteForm" class="note-form"><input id="noteTitle" maxlength="80" placeholder="Título da anotação" required><textarea id="noteBody" maxlength="2000" placeholder="Registre observações, hipóteses e fontes..." required></textarea><button type="submit" class="primary-button">＋ SALVAR ANOTAÇÃO</button></form><div id="notesList" class="notes-list"></div></article></section>
+      <section class="module-panel" id="panel-investigations">
+        <article class="panel-card">
+          <div class="panel-heading"><div><span class="panel-kicker">CASE MANAGEMENT</span><h2>Investigações</h2><p>Histórico das consultas realizadas nesta sessão.</p></div><span class="subtle-tag">SESSÃO ATUAL</span></div>
+          <div id="investigationsContent" class="history-list"><div class="activity-empty"><b>Nenhuma investigação ainda</b><small>Faça uma consulta na barra superior para começar.</small></div></div>
+          <button class="outline-button" type="button" id="newInvestigationBtn">＋ Nova investigação</button>
+        </article>
+      </section>
+      <section class="module-panel" id="panel-framework">
+        <article class="panel-card">
+          <div class="panel-heading"><div><span class="panel-kicker">PUBLIC RESOURCES</span><h2>OSINT Framework</h2><p>Atalhos para fontes públicas de consulta e documentação.</p></div><span class="subtle-tag">FONTES EXTERNAS</span></div>
+          <div class="framework-grid">
+            <a class="framework-item" href="https://osintframework.com/" target="_blank" rel="noreferrer"><b>OSINT Framework</b><span>Árvore de ferramentas e fontes abertas.</span><em>ABRIR FONTE ↗</em></a>
+            <a class="framework-item" href="https://www.iana.org/whois" target="_blank" rel="noreferrer"><b>IANA / WHOIS</b><span>Referência de serviços de registro de domínios.</span><em>ABRIR FONTE ↗</em></a>
+            <a class="framework-item" href="https://crt.sh/" target="_blank" rel="noreferrer"><b>Certificate Transparency</b><span>Pesquisar certificados publicados para domínios.</span><em>ABRIR FONTE ↗</em></a>
+            <a class="framework-item" href="https://www.arin.net/" target="_blank" rel="noreferrer"><b>ARIN</b><span>Registros públicos de alocação de endereços IP.</span><em>ABRIR FONTE ↗</em></a>
+            <a class="framework-item" href="https://www.cloudflare.com/learning/dns/what-is-dns/" target="_blank" rel="noreferrer"><b>DNS Reference</b><span>Documentação introdutória sobre DNS.</span><em>ABRIR FONTE ↗</em></a>
+            <a class="framework-item" href="https://www.rfc-editor.org/" target="_blank" rel="noreferrer"><b>RFC Editor</b><span>Especificações técnicas dos protocolos da internet.</span><em>ABRIR FONTE ↗</em></a>
+          </div>
+        </article>
+      </section>
+      <section class="module-panel" id="panel-infrastructure">
+        <article class="panel-card">
+          <div class="panel-heading"><div><span class="panel-kicker">INFRASTRUCTURE MAP</span><h2>Mapa de infraestrutura</h2><p>Relações derivadas dos registros públicos retornados para o alvo atual.</p></div><span class="subtle-tag" id="infraStatus">AGUARDANDO ALVO</span></div>
+          <div id="infrastructureContent" class="infra-map"><div class="empty-state compact"><b>Nenhuma infraestrutura mapeada</b><p>Consulte um domínio para visualizar seus registros DNS e dados de registro.</p></div></div>
+        </article>
+      </section>
       <footer class="app-footer"><span>TRACE INTELLIGENCE PLATFORM <b>·</b> BUILD 2.0</span><span>Dados públicos · Consultas passivas · Sem varredura ativa</span></footer>
     </main>
   </div>
