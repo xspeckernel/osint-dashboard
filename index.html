@@ -30,6 +30,8 @@
         <button class="nav-item" data-nav="timeline"><span class="nav-icon">◷</span> Timeline</button>
         <button class="nav-item" data-nav="confidence"><span class="nav-icon">◉</span> Confidence Score</button>
         <button class="nav-item" data-nav="evidence"><span class="nav-icon">▤</span> Evidence Center</button>
+        <button class="nav-item" data-nav="nametracker"><span class="nav-icon">⌕</span> Name Tracker</button>
+        <button class="nav-item" data-nav="emailtracker"><span class="nav-icon">✉</span> Email Tracker</button>
         <button class="nav-item" data-nav="certs"><span class="nav-icon">◉</span> Certificados</button>
         <button class="nav-item" data-nav="dns"><span class="nav-icon">▤</span> Registros DNS</button>
         <button class="nav-item" data-nav="notes"><span class="nav-icon">▧</span> Relatórios e notas <span class="nav-count" id="noteCount">0</span></button>
@@ -140,6 +142,29 @@
       <section class="module-panel" id="panel-timeline"><div class="module-heading"><div><div class="eyebrow">INVESTIGATION TIMELINE</div><h2>Timeline</h2><p>Registro cronológico das consultas e capturas feitas neste navegador.</p></div><span class="subtle-tag">LOCAL</span></div><article class="panel-card"><div id="timelineContent" class="timeline-list"><div class="compact-empty">Nenhuma atividade registrada.</div></div></article></section>
       <section class="module-panel" id="panel-confidence"><div class="module-heading"><div><div class="eyebrow">DATA QUALITY</div><h2>Confidence Score</h2><p>Indicador de cobertura das fontes consultadas, não uma probabilidade de verdade.</p></div><span class="subtle-tag">TRANSPARÊNCIA</span></div><article class="panel-card"><div id="confidenceContent" class="confidence-content"><div class="compact-empty">Faça uma consulta para calcular a cobertura dos dados.</div></div></article></section>
       <section class="module-panel" id="panel-evidence"><div class="module-heading"><div><div class="eyebrow">EVIDENCE CENTER</div><h2>Evidence Center</h2><p>Salve snapshots das respostas públicas com data e fonte.</p></div><span class="subtle-tag">ARMAZENAMENTO LOCAL</span></div><article class="panel-card"><div class="evidence-actions"><button class="primary-button" id="captureEvidenceBtn" type="button">＋ CAPTURAR CONSULTA ATUAL</button><button class="outline-button" id="exportEvidenceBtn" type="button">EXPORTAR EVIDÊNCIAS JSON</button><button class="outline-button" id="printReportBtn" type="button">IMPRIMIR / SALVAR PDF</button></div><div id="evidenceContent" class="evidence-list"><div class="compact-empty">Nenhuma evidência salva.</div></div></article><p class="module-footnote">Snapshots ficam no localStorage deste navegador. Não são enviados para um servidor nem sincronizados entre dispositivos.</p></section>
+      <section class="module-panel tracker-panel" id="panel-nametracker">
+        <div class="module-heading"><div><div class="eyebrow">PUBLIC MENTION RESEARCH</div><h2>Name Tracker</h2><p>Pesquisa de menções públicas em notícias e fontes institucionais.</p></div><span class="subtle-tag">PESQUISA PÚBLICA</span></div>
+        <article class="panel-card tracker-card">
+          <form id="nameTrackerForm" class="tracker-form">
+            <label for="nameTrackerInput">Nome de organização ou figura pública</label>
+            <div class="tracker-input-row"><input id="nameTrackerInput" maxlength="100" autocomplete="off" placeholder="Ex.: nome de uma organização" required><button class="primary-button" type="submit">PESQUISAR ↗</button></div>
+          </form>
+          <div id="nameTrackerResults" class="tracker-results"><div class="compact-empty">Digite um nome para preparar pesquisas em fontes públicas.</div></div>
+        </article>
+        <p class="module-footnote">Use este módulo para pesquisa de organizações, figuras públicas e contexto profissional/noticioso. Ele abre pesquisas externas; não confirma identidade, não agrega perfis sociais e não deve ser usado para localizar ou investigar particulares.</p>
+      </section>
+      <section class="module-panel tracker-panel" id="panel-emailtracker">
+        <div class="module-heading"><div><div class="eyebrow">EMAIL DOMAIN AUDIT</div><h2>Email Tracker</h2><p>Validação sintática e análise dos registros públicos do domínio.</p></div><span class="subtle-tag">AUDITORIA TÉCNICA</span></div>
+        <article class="panel-card tracker-card">
+          <form id="emailTrackerForm" class="tracker-form">
+            <label for="emailTrackerInput">Endereço de demonstração / análise autorizada</label>
+            <div class="tracker-input-row"><input id="emailTrackerInput" type="email" maxlength="254" autocomplete="off" value="luanrosak@gmail.com" placeholder="nome@dominio.com" required><button class="primary-button" id="emailTrackerBtn" type="submit">ANALISAR ↗</button></div>
+          </form>
+          <div id="emailTrackerResults" class="tracker-results"><div class="compact-empty">A análise verifica somente o formato e os registros públicos do domínio. Não verifica a existência da caixa postal.</div></div>
+          <div class="tracker-actions"><button class="outline-button" id="emailTrackerExport" type="button" disabled>EXPORTAR RESULTADO JSON</button></div>
+        </article>
+        <p class="module-footnote">O TRACE consulta MX, SPF e DMARC do domínio. Não tenta autenticar, enviar mensagens, descobrir contas vinculadas, consultar vazamentos ou identificar o titular do endereço. O email digitado não é salvo no histórico nem no localStorage.</p>
+      </section>
       <footer class="app-footer"><span>TRACE INTELLIGENCE PLATFORM <b>·</b> BUILD 2.0</span><span>Dados públicos · Consultas passivas · Sem varredura ativa</span></footer>
     </main>
   </div>
