@@ -203,3 +203,32 @@ body[data-view="overview"] .tabs-row.dashboard-overview-only{display:flex!import
 .geoint-result-summary>small{font-size:10px;color:#a7b6ca;line-height:1.5}
 .geoint-result-summary>p{margin:3px 0 0;font-size:11px;color:#aebbd0;line-height:1.6}
 @media(max-width:600px){.geoint-map{height:260px}.geoint-upload input{font-size:10px}}
+
+/* GEOINT map card inspired by the reference layout */
+.geoint-place-chips{display:flex;gap:9px;flex-wrap:wrap;margin:2px 0 6px}
+.geoint-place-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:24px;color:var(--text);font-size:11px;background:var(--panel)}
+.geoint-place-chip b{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#8392a8;color:#fff;font-size:10px}
+.geoint-place-chip.active{background:#126f61;border-color:#168b78;color:#fff}
+.geoint-place-chip.active b{background:#315ee8}
+.geoint-map-tabs{display:flex;gap:4px;flex-wrap:wrap;width:max-content;max-width:100%;padding:4px;background:#e9edf3;border-radius:10px;margin:9px 0 11px}
+.geoint-map-tabs button{border:0;border-radius:7px;padding:10px 13px;background:transparent;color:#526176;font-size:11px;font-weight:650;cursor:pointer}
+.geoint-map-tabs button.active{background:#147b69;color:#fff;box-shadow:0 2px 5px #0002}
+.geoint-map-stage{width:100%;min-height:300px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#e7edf2}
+.geoint-map{display:block;width:100%;height:430px;border:0;border-radius:0;background:#e7edf2}
+.geoint-map-caption{display:grid;grid-template-columns:auto 1fr;column-gap:9px;align-items:center;margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.geoint-map-caption>span{grid-row:span 2;color:#315ee8}
+.geoint-map-caption b{font-size:12px}
+.geoint-map-caption small{font-size:10px;color:var(--muted);margin-top:3px}
+.geoint-map-links{display:flex;gap:16px;flex-wrap:wrap;margin-top:11px}
+.geoint-map-links a{font-size:10px;color:var(--accent,#6ea8ff);text-decoration:none}
+.geoint-external-view{min-height:300px;display:grid;align-content:center;justify-items:center;gap:12px;padding:28px;text-align:center;color:#263449;background:linear-gradient(135deg,#e8eef4,#d8e3ed)}
+.geoint-external-view b{font-size:18px}
+.geoint-external-view p{max-width:420px;font-size:12px;line-height:1.6}
+.geoint-external-view a{padding:10px 15px;border-radius:7px;background:#147b69;color:#fff;text-decoration:none;font-size:11px;font-weight:700}
+@media(max-width:600px){
+ .geoint-map-tabs{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .geoint-map-tabs button{padding:10px 5px;font-size:9px}
+ .geoint-map{height:320px}
+ .geoint-map-stage{min-height:260px}
+ .geoint-map-links{display:grid;gap:9px}
+}
