@@ -19,7 +19,7 @@ Também é possível abrir `index.html` diretamente, mas algumas configurações
 - DNS-over-HTTPS via Cloudflare: A, AAAA, MX, NS, TXT e CAA.
 - RDAP para dados públicos de registro de domínio e alocação de IP.
 - Certificate Transparency via crt.sh.
-- Metadados de rede/ASN para IP; o painel não exibe coordenadas nem localização residencial.
+- IP Intelligence: metadados de rede/ASN e geolocalização aproximada por IP, sem endereço residencial.\n- GEOINT Image Analysis: prévia local de imagem e preparação de pesquisas por pistas visuais de locais públicos; sem reconhecimento automático.
 - Investigation Graph com relações observadas nos dados públicos retornados.\n- Domain Intelligence: nomes extraídos de Certificate Transparency e verificações SPF/DMARC.\n- Threat Intelligence: atalhos para fontes públicas externas de reputação e contexto.\n- Timeline local de consultas e capturas.\n- Confidence Score de cobertura das fontes (não é probabilidade de precisão).\n- Evidence Center com snapshots locais, exportação JSON e impressão para PDF.\n- Histórico temporário da sessão.
 - Anotações persistidas no `localStorage` do navegador.
 - Exportação de relatório JSON.
@@ -59,3 +59,12 @@ osint-dashboard/
 - **Email Tracker:** valida a sintaxe do endereço e consulta MX, TXT/SPF e DMARC do domínio via Cloudflare DNS-over-HTTPS. Não verifica se a caixa postal existe nem identifica seu titular.
 - O endereço informado no Email Tracker não é adicionado ao histórico nem armazenado no localStorage. A exportação JSON é manual e local.
 - Os módulos não consultam contas privadas, credenciais ou bases de vazamentos e não realizam tentativas de autenticação.
+
+ 
+## GEOINT / Image Analysis
+
+- A imagem selecionada é pré-visualizada localmente no navegador; o TRACE não faz upload.
+- O módulo prepara pesquisas externas a partir das pistas visuais descritas pelo usuário.
+- Não realiza reconhecimento visual automático nem confirma a localização.
+- Não deve ser usado para localizar residências, pessoas privadas ou rotinas.
+- Uma futura análise automática exigiria serviço de visão e backend para proteger credenciais.
