@@ -7,7 +7,7 @@ const state = {
   runs: 0, history: [], notes: JSON.parse(localStorage.getItem("trace_notes") || "[]"),
   timeline: JSON.parse(localStorage.getItem("trace_timeline") || "[]"),
   evidence: JSON.parse(localStorage.getItem("trace_evidence") || "[]"),
-  mailSecurity: null
+  mailSecurity: null, emailAudit: null
 };
 const DNS_TYPES = ["A", "AAAA", "MX", "NS", "TXT", "CAA"];
 const API = {
@@ -272,6 +272,7 @@ function switchView(view) {
   if (view === "timeline") renderTimeline();
   if (view === "confidence") renderConfidence();
   if (view === "evidence") renderEvidence();
+  if (view === "emailtracker") renderEmailTracker();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -377,6 +378,96 @@ function exportReport() {
   a.href = url; a.download = `trace-${state.target.value.replace(/[^a-z0-9.-]/gi, "_")}.json`;
   a.click(); URL.revokeObjectURL(url); showToast("Relatório JSON exportado.");
 }
+
+
+function renderNameTracker(name) {
+  const el = $("#nameTrackerResults");
+  if (!el) return;
+  if (!name) { el.innerHTML = '<div class="compact-empty">Digite um nome para preparar pesquisas em fontes públicas.</div>'; return; }
+  const q = encodeURIComponent('"'+name+'"');
+  const links = [
+    ["Google News", "Menções em notícias públicas.", "https://news.google.com/search?q="+q],
+    ["Fontes institucionais", "Páginas públicas de instituições e organizações (.gov.br).", "https://www.google.com/search?q="+encodeURIComponent('"'+name+'" site:gov.br')],
+    ["Publicações acadêmicas", "Resultados em publicações e materiais acadêmicos.", "https://scholar.google.com/scholar?q="+q]
+  ];
+  el.innerHTML = '<div class="tracker-result-summary"><b>Pesquisas preparadas para: '+escapeHtml(name)+'</b><small>Os resultados serão fornecidos pelos sites externos; homônimos são possíveis.</small></div>' +
+    links.map(x=>'<a class="tracker-source-link" href="'+x[2]+'" target="_blank" rel="noopener noreferrer"><span><b>'+x[0]+'</b><small>'+x[1]+'</small></span><em>ABRIR ↗</em></a>').join("");
+}
+async function auditEmail(raw) {
+  const email = String(raw || "").trim();
+  const match = /^([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+)@([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)+)$/.exec(email);
+  if (!match || email.length > 254 || match[1].length > 64) throw new Error("Formato de email inválido.");
+  const domain = match[2].toLowerCase();
+  const provider = domain === "gmail.com" ? "Google Gmail" :
+    domain === "outlook.com" || domain === "hotmail.com" || domain === "live.com" ? "Microsoft" :
+    domain === "yahoo.com" ? "Yahoo" : "Provedor não identificado";
+  const queries = [
+    ["MX", domain, "MX"],
+    ["TXT", domain, "TXT"],
+    ["DMARC", "_dmarc."+domain, "TXT"]
+  ];
+  const results = await Promise.all(queries.map(async ([label, name, type]) => {
+    try {
+      const data = await fetchJson(API.dns(name, type), {headers:{accept:"application/dns-json"}});
+      return {label, status:data.Status, records:(data.Answer||[]).map(x=>x.data), error:null};
+    } catch (error) {
+      return {label, status:null, records:[], error:"Fonte DNS indisponível"};
+    }
+  }));
+  const txt = results.find(x=>x.label==="TXT")?.records || [];
+  const spf = txt.filter(x=>/^v=spf1/i.test(x));
+  const dmarc = results.find(x=>x.label==="DMARC")?.records || [];
+  state.emailAudit = {
+    checked_at:new Date().toISOString(),
+    domain,
+    provider,
+    syntax_valid:true,
+    mx:results.find(x=>x.label==="MX"),
+    spf,
+    dmarc,
+    note:"A análise não confirma a existência da caixa postal nem identifica seu titular."
+  };
+  renderEmailTracker();
+}
+function renderEmailTracker() {
+  const el=$("#emailTrackerResults"), btn=$("#emailTrackerExport");
+  if(!el)return;
+  const d=state.emailAudit;
+  if(!d){if(btn)btn.disabled=true;return;}
+  if(btn)btn.disabled=false;
+  const rows=(label,items,unavailable)=>'<div class="tracker-data-row"><div><b>'+label+'</b><small>'+ (items.length?items.map(escapeHtml).join("<br>"):unavailable) +'</small></div><span class="intel-status">'+(items.length?"ENCONTRADO":"NÃO IDENTIFICADO")+'</span></div>';
+  const mx=d.mx?.records||[];
+  el.innerHTML='<div class="tracker-result-summary"><b>Auditoria técnica concluída</b><small>Domínio: '+escapeHtml(d.domain)+' · '+escapeHtml(new Date(d.checked_at).toLocaleString("pt-BR"))+'</small></div>'+
+    '<div class="tracker-metrics">'+
+      '<div class="data-tile"><span>FORMATO</span><b>VÁLIDO</b></div>'+
+      '<div class="data-tile"><span>PROVEDOR ESTIMADO</span><b>'+escapeHtml(d.provider)+'</b></div>'+
+      '<div class="data-tile"><span>DOMÍNIO</span><b>'+escapeHtml(d.domain)+'</b></div>'+
+    '</div>'+
+    rows("MX — RECEBIMENTO",mx,"Nenhum registro MX retornado ou fonte indisponível.")+
+    rows("SPF — AUTENTICAÇÃO",d.spf,"Nenhum registro SPF identificado na resposta.")+
+    rows("DMARC — POLÍTICA",d.dmarc,"Nenhum registro DMARC identificado na resposta.")+
+    '<p class="tracker-disclaimer">'+escapeHtml(d.note)+'</p>';
+}
+$("#nameTrackerForm")?.addEventListener("submit",event=>{
+  event.preventDefault();
+  const name=$("#nameTrackerInput").value.trim();
+  if(name.length<2){showToast("Informe um nome válido.");return;}
+  renderNameTracker(name);
+});
+$("#emailTrackerForm")?.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const button=$("#emailTrackerBtn");button.disabled=true;button.textContent="CONSULTANDO...";
+  $("#emailTrackerResults").innerHTML='<div class="compact-empty">Consultando DNS público do domínio...</div>';
+  try{await auditEmail($("#emailTrackerInput").value);showToast("Auditoria técnica concluída.");}
+  catch(error){$("#emailTrackerResults").innerHTML='<div class="tracker-error">'+escapeHtml(error.message)+'</div>';state.emailAudit=null;renderEmailTracker();}
+  finally{button.disabled=false;button.textContent="ANALISAR ↗";}
+});
+$("#emailTrackerExport")?.addEventListener("click",()=>{
+  if(!state.emailAudit)return;
+  const blob=new Blob([JSON.stringify(state.emailAudit,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="trace-email-domain-audit.json";a.click();URL.revokeObjectURL(url);
+});
 
 $("#searchForm").addEventListener("submit", event => {
   event.preventDefault(); runAnalysis($("#targetInput").value);
