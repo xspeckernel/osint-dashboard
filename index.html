@@ -170,18 +170,18 @@
       </section>
 
       <section class="module-panel tracker-panel" id="panel-geoint">
-        <div class="module-heading"><div><div class="eyebrow">GEOINT / VISUAL LANDMARK RESEARCH</div><h2>Image Location Analysis</h2><p>Organize visual clues from a photo of a public place or landmark.</p></div><span class="subtle-tag">LOCAL IMAGE PREVIEW</span></div>
+        <div class="module-heading"><div><div class="eyebrow">GEOINT / VISUAL LANDMARK RESEARCH</div><h2>Image Location Analysis</h2><p>Organize visual clues from a photo of a public place or landmark.</p></div><span class="subtle-tag">AI VISION · PUBLIC LANDMARKS</span></div>
         <article class="panel-card tracker-card">
-          <div class="geoint-upload"><label for="geointImage">Selecionar imagem de um local público</label><input id="geointImage" type="file" accept="image/jpeg,image/png,image/webp"><small>A imagem é pré-visualizada neste navegador e não é enviada pelo TRACE.</small></div>
+          <div class="geoint-upload"><label for="geointImage">Selecionar foto de um ponto de referência público</label><input id="geointImage" type="file" accept="image/jpeg,image/png,image/webp"><small>A imagem só será enviada ao serviço de IA quando você clicar em analisar. Não é armazenada pelo TRACE.</small></div>
           <div id="geointPreview" class="geoint-preview"><div class="compact-empty">A prévia da imagem aparecerá aqui.</div></div>
           <form id="geointForm" class="tracker-form geoint-form">
             <label for="geointClues">Pistas visuais observadas</label>
             <textarea id="geointClues" maxlength="500" rows="4" placeholder="Ex.: arquitetura colonial, placas públicas, montanhas ao fundo, idioma das placas, monumento..." required></textarea>
-            <button class="primary-button" type="submit">PESQUISAR PISTAS ↗</button>
+            <button class="primary-button" id="geointAnalyzeBtn" type="submit">ANALISAR IMAGEM ↗</button>
           </form>
-          <div id="geointResults" class="tracker-results"><div class="compact-empty">Descreva pistas visuais para preparar pesquisas em fontes públicas.</div></div>
+          <div id="geointResults" class="tracker-results"><div class="compact-empty">Envie uma foto de um monumento, parque ou outro ponto público para começar.</div></div>
         </article>
-        <p class="module-footnote">Esta versão não usa reconhecimento visual automático nem promete identificar o local. Ela ajuda a estruturar pistas e pesquisar referências públicas. Não use para descobrir residências, rotinas ou a localização de pessoas privadas. Reconhecimento automático exigiria um serviço de visão com chave protegida em backend.</p>
+        <p class="module-footnote">O GEOINT procura apenas pontos de referência públicos. A análise é uma estimativa e pode errar; não identifica ruas residenciais, casas ou pessoas. A imagem é enviada à API de visão para análise e não é salva pelo TRACE.</p>
       </section>
       <footer class="app-footer"><span>TRACE INTELLIGENCE PLATFORM <b>·</b> BUILD 2.0</span><span>Dados públicos · Consultas passivas · Sem varredura ativa</span></footer>
     </main>
