@@ -4,7 +4,10 @@
 const $ = (selector) => document.querySelector(selector);
 const state = {
   target: null, dns: [], certs: [], rdap: null, ipInfo: null,
-  runs: 0, history: [], notes: JSON.parse(localStorage.getItem("trace_notes") || "[]")
+  runs: 0, history: [], notes: JSON.parse(localStorage.getItem("trace_notes") || "[]"),
+  timeline: JSON.parse(localStorage.getItem("trace_timeline") || "[]"),
+  evidence: JSON.parse(localStorage.getItem("trace_evidence") || "[]"),
+  mailSecurity: null
 };
 const DNS_TYPES = ["A", "AAAA", "MX", "NS", "TXT", "CAA"];
 const API = {
@@ -143,6 +146,7 @@ function renderStats() {
   $("#statRdap").textContent = state.rdap ? "OK" : "—";
   $("#rdapSub").textContent = state.rdap ? "Resposta recebida" : "Sem resposta";
   renderDns(); renderCerts(); renderRdap(); renderOverview(); updateTargetHeader(); renderInfrastructure();
+  renderGraph(); renderDomainIntel(); renderThreatIntel(); renderConfidence();
 }
 async function analyzeDomain(target) {
   const jobs = await Promise.allSettled([
@@ -156,6 +160,8 @@ async function analyzeDomain(target) {
   state.dns = jobs[0].status === "fulfilled" ? jobs[0].value : [];
   state.rdap = jobs[1].status === "fulfilled" ? jobs[1].value : null;
   state.certs = jobs[2].status === "fulfilled" && Array.isArray(jobs[2].value) ? jobs[2].value : [];
+  state.mailSecurity = null;
+  try { state.mailSecurity = { dmarc: await fetchJson(API.dns("_dmarc."+target.value,"TXT"), {headers:{accept:"application/dns-json"}}) }; } catch (_) { state.mailSecurity = {dmarc:null}; }
   const failures = jobs.filter(job => job.status === "rejected").length;
   if (failures === jobs.length) setAlert("As fontes públicas não responderam. Verifique sua conexão e tente novamente.");
   else if (failures) setAlert(`${failures} fonte(s) não responderam. Os demais resultados foram carregados.`);
@@ -175,7 +181,8 @@ async function runAnalysis(raw) {
   let target;
   try { target = normalizeTarget(raw); }
   catch (error) { setAlert(error.message); return; }
-  state.target = target; state.dns = []; state.certs = []; state.rdap = null; state.ipInfo = null;
+  state.target = target; state.dns = []; state.certs = []; state.rdap = null; state.ipInfo = null; state.mailSecurity = null;
+  addTimeline("Consulta iniciada",target.value);
   state.runs++; addHistory(target); updateTargetHeader(); renderStats();
   $("#overviewStatus").textContent = "CONSULTANDO";
   $("#searchBtn").disabled = true; $("#searchBtn").querySelector("span").textContent = "CONSULTANDO";
@@ -247,7 +254,7 @@ function renderInfrastructure() {
     </div>`;
 }
 function switchView(view) {
-  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
+  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", graph:"Investigation Graph", domainintel:"Domain Intelligence", threatintel:"Threat Intelligence", timeline:"Timeline", confidence:"Confidence Score", evidence:"Evidence Center", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
   document.body.dataset.view = view;
   document.querySelectorAll(".nav-item[data-nav]").forEach(button => {
     const active = button.dataset.nav === view;
@@ -259,7 +266,80 @@ function switchView(view) {
   $("#crumbCurrent").textContent = names[view] || "TRACE";
   if (view === "investigations") renderInvestigations();
   if (view === "infrastructure") renderInfrastructure();
+  if (view === "graph") renderGraph();
+  if (view === "domainintel") renderDomainIntel();
+  if (view === "threatintel") renderThreatIntel();
+  if (view === "timeline") renderTimeline();
+  if (view === "confidence") renderConfidence();
+  if (view === "evidence") renderEvidence();
   window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function addTimeline(action, detail) {
+  state.timeline.unshift({at:new Date().toISOString(),action,detail});
+  state.timeline=state.timeline.slice(0,100);
+  localStorage.setItem("trace_timeline",JSON.stringify(state.timeline));
+  renderTimeline();
+}
+function renderTimeline() {
+  const el=$("#timelineContent"); if(!el)return;
+  el.innerHTML=state.timeline.length?state.timeline.map(x=>`<div class="timeline-row"><span class="timeline-date">${escapeHtml(new Date(x.at).toLocaleString("pt-BR"))}</span><div><b>${escapeHtml(x.action)}</b><small>${escapeHtml(x.detail)}</small></div></div>`).join(""):'<div class="compact-empty">Nenhuma atividade registrada.</div>';
+}
+function renderGraph() {
+  const el=$("#graphContent"); if(!el)return;
+  if(!state.target){el.innerHTML='<div class="empty-state compact"><b>Grafo aguardando consulta</b><p>Analise um domínio ou IP para montar as relações encontradas.</p></div>';return;}
+  const nodes=[{label:state.target.value,sub:state.target.type}];
+  if(state.ipInfo?.connection?.asn)nodes.push({label:"AS"+state.ipInfo.connection.asn,sub:"ASN",p:true});
+  if(state.ipInfo?.connection?.org)nodes.push({label:state.ipInfo.connection.org,sub:"ORGANIZAÇÃO"});
+  if(state.ipInfo?.city)nodes.push({label:state.ipInfo.city,sub:"GEOIP APROX."});
+  (state.dns.flatMap(x=>(x.Answer||[]).map(a=>({type:x.typeName||x.qtype,data:a.data}))).slice(0,8)).forEach(x=>nodes.push({label:x.data,sub:"DNS "+x.type,p:x.type==="MX"}));
+  [...new Set(state.certs.flatMap(c=>String(c.name_value||c.common_name||"").split(/[\n,]+/)).filter(Boolean))].slice(0,6).forEach(x=>nodes.push({label:x,sub:"CERTIFICADO",p:true}));
+  const total=nodes.length, cx=500,cy=230,rad=170;
+  const circles=nodes.slice(1).map((n,i)=>{const a=(Math.PI*2*i/Math.max(1,total-1))-Math.PI/2,x=cx+Math.cos(a)*rad,y=cy+Math.sin(a)*rad;return { ...n,x,y};});
+  const edges=circles.map(n=>`<line class="graph-edge" x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}"/>`).join("");
+  const others=circles.map(n=>`<g><circle class="graph-node ${n.p?"secondary":""}" cx="${n.x}" cy="${n.y}" r="23"/><text class="graph-label" x="${n.x}" y="${n.y+4}">${escapeHtml(n.sub.slice(0,9))}</text><text class="graph-sub" x="${n.x}" y="${n.y+39}">${escapeHtml(n.label.slice(0,30))}</text></g>`).join("");
+  el.innerHTML=`<div class="graph-content"><svg viewBox="0 0 1000 460" role="img" aria-label="Grafo de relações públicas observadas"><g transform="translate(0 0) scale(1 1)">${edges}${others}<circle class="graph-node" cx="${cx}" cy="${cy}" r="35"/><text class="graph-label" x="${cx}" y="${cy-2}">${escapeHtml(state.target.type)}</text><text class="graph-sub" x="${cx}" y="${cy+13}">ALVO</text></g></svg><p class="module-footnote">Nós periféricos representam dados retornados pelas fontes consultadas. A proximidade no desenho não indica relação técnica além do vínculo com o alvo.</p></div>`;
+}
+function renderDomainIntel() {
+  const sub=$("#subdomainResults"),mail=$("#mailSecurityResults"); if(!sub||!mail)return;
+  if(!state.target||state.target.type!=="DOMAIN"){sub.innerHTML='<div class="compact-empty">Consulte um domínio para listar nomes de certificados.</div>';mail.innerHTML='<div class="compact-empty">A verificação de e-mail exige um domínio.</div>';return;}
+  const names=[...new Set(state.certs.flatMap(c=>String(c.name_value||c.common_name||"").split(/[\n,]+/)).map(x=>x.trim().toLowerCase()).filter(x=>x&&x.includes(state.target.value)))].sort();
+  sub.innerHTML=names.length?names.map(n=>`<div class="intel-row"><b>${escapeHtml(n)}</b><small>Origem: Certificate Transparency (crt.sh)</small></div>`).join(""):'<div class="compact-empty">Nenhum nome correspondente retornado nos certificados consultados. Isso não confirma inexistência de subdomínios.</div>';
+  const txt=state.dns.filter(x=>x.typeName==="TXT").flatMap(x=>(x.Answer||[]).map(a=>a.data));
+  const spf=txt.find(x=>/^v=spf1/i.test(x));
+  const dmarc=state.mailSecurity?.dmarc?.Answer?.flatMap(x=>x.data)||[];
+  mail.innerHTML=`<div class="intel-row"><b>SPF</b><small>${spf?"Registro TXT SPF encontrado":"Nenhum SPF identificado na resposta DNS consultada."}</small><span class="intel-status">${spf?"REGISTRO ENCONTRADO":"NÃO IDENTIFICADO"}</span>${spf?`<small>${escapeHtml(spf)}</small>`:""}</div><div class="intel-row"><b>DMARC</b><small>${dmarc.length?"Registro DMARC encontrado":"Nenhum DMARC identificado na consulta."}</small><span class="intel-status">${dmarc.length?"REGISTRO ENCONTRADO":"NÃO IDENTIFICADO"}</span>${dmarc.map(x=>`<small>${escapeHtml(x)}</small>`).join("")}</div>`;
+}
+function renderThreatIntel() {
+ const el=$("#threatIntelContent");if(!el)return;
+ if(!state.target){el.innerHTML='<div class="compact-empty">Informe um domínio ou IP para preparar as consultas.</div>';return;}
+ const q=encodeURIComponent(state.target.value);
+ const links=[["VirusTotal","Reputação e relações observadas pela comunidade.",`https://www.virustotal.com/gui/search/${q}`],["urlscan.io","Pesquisas públicas de páginas e domínios.",`https://urlscan.io/search/#${q}`],["Google Safe Browsing","Verificação de transparência de navegação segura.",`https://transparencyreport.google.com/safe-browsing/search?url=${q}`],["crt.sh","Certificados públicos associados ao domínio.",`https://crt.sh/?q=${q}`],["RDAP","Dados públicos de registro de IP ou domínio.",state.target.type==="IP"?`https://rdap.org/ip/${q}`:`https://rdap.org/domain/${q}`],["Cloudflare DNS","Consulta DNS pública do alvo.",`https://dns.google/resolve?name=${q}`]];
+ el.innerHTML=links.map(x=>`<a class="threat-link" href="${x[2]}" target="_blank" rel="noopener noreferrer"><b>${x[0]}</b><span>${x[1]}</span><em>ABRIR CONSULTA ↗</em></a>`).join("");
+}
+function confidenceData(){
+ const parts=[["RDAP",!!state.rdap],["GEOIP",!!state.ipInfo],["DNS",state.dns.some(x=>x.Answer?.length)],["CERTIFICADOS",state.certs.length>0],["SPF / DMARC",!!state.mailSecurity]];
+ const available=parts.filter(x=>x[1]).length;return {parts,score:Math.round(available/parts.length*100)};
+}
+function renderConfidence(){
+ const el=$("#confidenceContent");if(!el)return;if(!state.target){el.innerHTML='<div class="compact-empty">Faça uma consulta para calcular a cobertura dos dados.</div>';return;}
+ const d=confidenceData();
+ el.innerHTML=`<div class="confidence-score">${d.score}<span style="font-size:18px;color:var(--muted)">/100</span></div><p class="module-footnote">Cobertura: ${d.parts.filter(x=>x[1]).length} de ${d.parts.length} grupos de dados disponíveis nesta consulta. Não é uma avaliação de segurança nem uma probabilidade de precisão.</p><div class="confidence-meter"><span style="width:${d.score}%"></span></div><div class="confidence-breakdown">${d.parts.map(x=>`<div class="confidence-part"><small>${x[0]}</small><b>${x[1]?"DISPONÍVEL":"SEM DADOS"}</b></div>`).join("")}</div>`;
+}
+function evidenceSnapshot(){
+ return {captured_at:new Date().toISOString(),target:state.target,rdap:state.rdap,dns:state.dns,certificates:state.certs,ip_metadata:state.ipInfo,mail_security:state.mailSecurity,sources:["rdap.org","cloudflare-dns.com","crt.sh","ipwho.is"]};
+}
+function renderEvidence(){
+ const el=$("#evidenceContent");if(!el)return;
+ el.innerHTML=state.evidence.length?state.evidence.map((x,i)=>`<div class="evidence-row"><b>${escapeHtml(x.target?.value||"Alvo")}</b><small>Capturado em ${escapeHtml(new Date(x.captured_at).toLocaleString("pt-BR"))} · ${escapeHtml(x.target?.type||"")}</small><button class="delete-note" data-delete-evidence="${i}">EXCLUIR</button></div>`).join(""):'<div class="compact-empty">Nenhuma evidência salva.</div>';
+}
+function captureEvidence(){
+ if(!state.target){showToast("Faça uma consulta antes de capturar evidências.");return;}
+ state.evidence.unshift(evidenceSnapshot());state.evidence=state.evidence.slice(0,50);
+ localStorage.setItem("trace_evidence",JSON.stringify(state.evidence));renderEvidence();addTimeline("Evidência capturada",state.target.value);showToast("Snapshot salvo neste navegador.");
+}
+function exportEvidence(){
+ const blob=new Blob([JSON.stringify(state.evidence,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="trace-evidence.json";a.click();URL.revokeObjectURL(url);
 }
 function switchTab(tab) { switchView(tab); }
 function saveNotes() {
@@ -317,4 +397,10 @@ $("#notesList").addEventListener("click", event => {
   saveNotes(); renderNotes(); showToast("Anotação excluída.");
 });
 $("#exportBtn").addEventListener("click", exportReport);
-renderNotes(); renderHistory(); updateTargetHeader(); renderInvestigations(); renderInfrastructure(); switchView("overview");
+$("#captureEvidenceBtn")?.addEventListener("click",captureEvidence);
+$("#exportEvidenceBtn")?.addEventListener("click",exportEvidence);
+$("#printReportBtn")?.addEventListener("click",()=>window.print());
+$("#evidenceContent")?.addEventListener("click",event=>{const b=event.target.closest("[data-delete-evidence]");if(!b)return;state.evidence.splice(Number(b.dataset.deleteEvidence),1);localStorage.setItem("trace_evidence",JSON.stringify(state.evidence));renderEvidence();});
+
+renderNotes(); renderHistory(); updateTargetHeader(); renderInvestigations(); renderInfrastructure();
+renderTimeline();renderEvidence();renderGraph();renderDomainIntel();renderThreatIntel();renderConfidence();switchView("overview");
