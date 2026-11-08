@@ -395,24 +395,54 @@ function handleGeointImage(file) {
   img.onerror=()=>{preview.innerHTML='<div class="tracker-error">Não foi possível abrir esta imagem.</div>';};
   img.src=geointObjectUrl;
 }
-function renderGeointSearch(clues) {
+function renderGeointResult(result) {
   const el=$("#geointResults");if(!el)return;
-  const q=encodeURIComponent(clues.trim());
-  const links=[
-    ["OpenStreetMap / Wiki","Pesquisar referências geográficas e pontos de interesse.","https://www.google.com/search?q="+q+"+site%3Aopenstreetmap.org+OR+site%3Awikidata.org"],
-    ["Google Maps","Comparar nomes de locais e pontos de referência públicos.","https://www.google.com/maps/search/"+q],
-    ["Pesquisa de imagens públicas","Buscar imagens públicas semelhantes para comparação manual.","https://www.google.com/search?tbm=isch&q="+q]
-  ];
-  el.innerHTML='<div class="tracker-result-summary"><b>Pesquisa preparada</b><small>Compare resultados com mais de uma pista independente. Uma semelhança visual isolada não confirma um local.</small></div>'+links.map(x=>'<a class="tracker-source-link" href="'+x[2]+'" target="_blank" rel="noopener noreferrer"><span><b>'+x[0]+'</b><small>'+x[1]+'</small></span><em>ABRIR ↗</em></a>').join("");
+  if(!result.found){
+    el.innerHTML='<div class="tracker-result-summary"><b>Nenhum marco público confirmado</b><small>'+escapeHtml(result.message||"Não foi possível identificar um ponto de referência público.")+'</small></div>';
+    return;
+  }
+  const location=[result.city,result.region,result.country].filter(Boolean).map(escapeHtml).join(", ");
+  let mapHtml='<div class="compact-empty">Não foi possível confirmar uma posição cartográfica para este marco.</div>';
+  if(result.map&&Number.isFinite(result.map.lat)&&Number.isFinite(result.map.lon)){
+    const lat=result.map.lat,lon=result.map.lon,delta=.006;
+    const bbox=[lon-delta,lat-delta,lon+delta,lat+delta].join("%2C");
+    const src="https://www.openstreetmap.org/export/embed.html?bbox="+bbox+"&layer=mapnik&marker="+lat+"%2C"+lon;
+    mapHtml='<iframe class="geoint-map" title="Mapa do ponto de referência público" loading="lazy" referrerpolicy="no-referrer" src="'+src+'"></iframe><a class="tracker-source-link" href="'+escapeHtml(result.map.osm)+'" target="_blank" rel="noopener noreferrer"><span><b>Abrir mapa ampliado</b><small>OpenStreetMap · posição aproximada do marco público</small></span><em>ABRIR ↗</em></a>';
+  }
+  el.innerHTML='<div class="tracker-result-summary"><b>'+escapeHtml(result.landmark)+'</b><small>'+location+'</small><small>Confiança estimada: '+escapeHtml(result.confidence||"não informada")+'</small><p>'+escapeHtml(result.reason||"Resultado automático sujeito a confirmação.")+'</p></div><div class="geoint-map-wrap"><div class="panel-kicker">MAPA DO PONTO PÚBLICO</div>'+mapHtml+'</div><p class="module-footnote">Resultado automatizado, não uma confirmação. Confira o marco em fontes independentes.</p>';
+}
+async function fileToDataUrl(file) {
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(new Error("Não foi possível ler a imagem."));
+    reader.readAsDataURL(file);
+  });
 }
 $("#geointImage")?.addEventListener("change",event=>handleGeointImage(event.target.files?.[0]));
-$("#geointForm")?.addEventListener("submit",event=>{
+$("#geointForm")?.addEventListener("submit",async event=>{
   event.preventDefault();
+  const file=$("#geointImage")?.files?.[0];
   const clues=$("#geointClues").value.trim();
-  if(clues.length<8){showToast("Adicione mais detalhes visuais para pesquisar.");return;}
-  renderGeointSearch(clues);
-  addTimeline("Pesquisa GEOINT preparada","Análise manual de pistas visuais de local público");
-  showToast("Pesquisas de referência preparadas.");
+  if(!file){showToast("Selecione uma imagem primeiro.");return;}
+  if(file.size>3*1024*1024){showToast("A imagem precisa ter até 3 MB.");return;}
+  const button=$("#geointAnalyzeBtn");
+  button.disabled=true;button.textContent="ANALISANDO...";
+  $("#geointResults").innerHTML='<div class="compact-empty">Analisando a imagem em busca de um ponto de referência público...</div>';
+  try{
+    const image=await fileToDataUrl(file);
+    const response=await fetch("/api/geoint",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,clues})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||"Falha na análise.");
+    renderGeointResult(result);
+    addTimeline("Análise GEOINT concluída",result.found?(result.landmark+" · "+result.city):"Nenhum marco público confirmado");
+    if(result.found)showToast("Análise concluída. Confira o mapa e as fontes.");
+    else showToast("Não foi possível confirmar um marco público.");
+  }catch(error){
+    $("#geointResults").innerHTML='<div class="tracker-error">'+escapeHtml(error.message||"Erro ao analisar imagem.")+'</div>';
+  }finally{
+    button.disabled=false;button.textContent="ANALISAR IMAGEM ↗";
+  }
 });
 
 function renderNameTracker(name) {
