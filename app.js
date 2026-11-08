@@ -444,7 +444,6 @@ $("#geointImage")?.addEventListener("change",event=>handleGeointImage(event.targ
 $("#geointForm")?.addEventListener("submit",async event=>{
   event.preventDefault();
   const file=$("#geointImage")?.files?.[0];
-  const clues=$("#geointClues").value.trim();
   if(!file){showToast("Selecione uma imagem primeiro.");return;}
   if(file.size>3*1024*1024){showToast("A imagem precisa ter até 3 MB.");return;}
   const button=$("#geointAnalyzeBtn");
@@ -452,7 +451,7 @@ $("#geointForm")?.addEventListener("submit",async event=>{
   $("#geointResults").innerHTML='<div class="compact-empty">Analisando a imagem em busca de um ponto de referência público...</div>';
   try{
     const image=await fileToDataUrl(file);
-    const response=await fetch("/api/geoint",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,clues})});
+    const response=await fetch("/api/geoint",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image})});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||"Falha na análise.");
     renderGeointResult(result);
