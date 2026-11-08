@@ -49,26 +49,26 @@
         <div class="top-actions"><span class="status-pill"><i></i> Fontes públicas</span><button class="icon-button" id="exportBtn" title="Exportar relatório" aria-label="Exportar relatório">⇩</button></div>
       </header>
 
-      <section class="page-heading">
+      <section class="page-heading dashboard-overview-only">
         <div><div class="eyebrow">TRACE / INTELLIGENCE CENTER</div><h2>Visão geral</h2><p>Acompanhe consultas, registros e fontes de inteligência em um só lugar.</p></div>
         <div class="heading-chip"><span class="pulse"></span> MODO PASSIVO</div>
       </section>
 
       <div id="alertBox" class="alert hidden" role="status"></div>
 
-      <section class="target-strip" id="targetStrip">
+      <section class="target-strip dashboard-overview-only" id="targetStrip">
         <div class="target-main"><span class="target-icon">◎</span><div><small>ALVO SELECIONADO</small><b id="targetName">Nenhum alvo selecionado</b></div></div>
         <div class="target-meta"><span id="targetType">AGUARDANDO CONSULTA</span><span id="targetTime">—</span></div>
       </section>
 
-      <section class="stats-grid" id="statsGrid">
+      <section class="stats-grid dashboard-overview-only" id="statsGrid">
         <article class="stat-card"><div class="stat-top"><span>CONSULTAS NA SESSÃO</span><i class="blue">◎</i></div><strong id="statRuns">0</strong><small>Investigações iniciadas</small></article>
         <article class="stat-card"><div class="stat-top"><span>REGISTROS DNS</span><i class="green">▤</i></div><strong id="statDns">—</strong><small>Respostas encontradas</small></article>
         <article class="stat-card"><div class="stat-top"><span>CERTIFICADOS</span><i class="purple">◈</i></div><strong id="statCerts">—</strong><small>Entradas públicas</small></article>
         <article class="stat-card"><div class="stat-top"><span>STATUS RDAP</span><i class="red">◉</i></div><strong id="statRdap">—</strong><small id="rdapSub">Aguardando consulta</small></article>
       </section>
 
-      <section class="dashboard-grid">
+      <section class="dashboard-grid dashboard-overview-only">
         <article class="panel-card activity-panel">
           <div class="panel-heading"><div><h2>◌ Atividade recente</h2><p>Últimas consultas realizadas nesta sessão</p></div><span class="subtle-tag">LIVE SESSION</span></div>
           <div id="historyList" class="history-list"><div class="activity-empty"><span>◷</span><b>Nenhuma atividade ainda</b><small>As consultas realizadas aparecerão aqui.</small></div></div>
@@ -87,7 +87,7 @@
         </article>
       </section>
 
-      <div class="tabs-row">
+      <div class="tabs-row dashboard-overview-only">
         <button class="tab-button active" data-tab="overview">Resumo</button>
         <button class="tab-button" data-tab="dns">Registros DNS</button>
         <button class="tab-button" data-tab="certs">Certificados</button>
@@ -113,14 +113,14 @@
       <section class="module-panel" id="panel-framework">
         <article class="panel-card">
           <div class="panel-heading"><div><span class="panel-kicker">PUBLIC RESOURCES</span><h2>OSINT Framework</h2><p>Atalhos para fontes públicas de consulta e documentação.</p></div><span class="subtle-tag">FONTES EXTERNAS</span></div>
-          <div class="framework-grid">
-            <a class="framework-item" href="https://osintframework.com/" target="_blank" rel="noreferrer"><b>OSINT Framework</b><span>Árvore de ferramentas e fontes abertas.</span><em>ABRIR FONTE ↗</em></a>
-            <a class="framework-item" href="https://www.iana.org/whois" target="_blank" rel="noreferrer"><b>IANA / WHOIS</b><span>Referência de serviços de registro de domínios.</span><em>ABRIR FONTE ↗</em></a>
-            <a class="framework-item" href="https://crt.sh/" target="_blank" rel="noreferrer"><b>Certificate Transparency</b><span>Pesquisar certificados publicados para domínios.</span><em>ABRIR FONTE ↗</em></a>
-            <a class="framework-item" href="https://www.arin.net/" target="_blank" rel="noreferrer"><b>ARIN</b><span>Registros públicos de alocação de endereços IP.</span><em>ABRIR FONTE ↗</em></a>
-            <a class="framework-item" href="https://www.cloudflare.com/learning/dns/what-is-dns/" target="_blank" rel="noreferrer"><b>DNS Reference</b><span>Documentação introdutória sobre DNS.</span><em>ABRIR FONTE ↗</em></a>
-            <a class="framework-item" href="https://www.rfc-editor.org/" target="_blank" rel="noreferrer"><b>RFC Editor</b><span>Especificações técnicas dos protocolos da internet.</span><em>ABRIR FONTE ↗</em></a>
+          <div class="framework-toolbar">
+            <div><b>OSINT Framework original</b><small>Árvore interativa de categorias e recursos públicos.</small></div>
+            <a class="framework-open-link" href="https://osintframework.com/" target="_blank" rel="noopener noreferrer">ABRIR EM NOVA ABA ↗</a>
           </div>
+          <div class="framework-frame-wrap">
+            <iframe class="framework-frame" src="https://osintframework.com/" title="OSINT Framework original" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"></iframe>
+          </div>
+          <p class="framework-fallback">Se a árvore não carregar aqui, use “Abrir em nova aba”. Alguns sites bloqueiam a exibição dentro de outros sites.</p>
         </article>
       </section>
       <section class="module-panel" id="panel-infrastructure">
