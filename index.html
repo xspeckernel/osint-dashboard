@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0f16">
+  <meta name="description" content="TRACE — painel de inteligência OSINT com consultas passivas a fontes públicas.">
+  <title>TRACE — Intelligence Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="TRACE início">
+        <span class="brand-mark">T</span>
+        <span class="brand-copy"><b>TRACE</b><small>INTELLIGENCE PLATFORM</small></span>
+      </a>
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav" aria-label="Navegação principal">
+        <button class="nav-item active" data-tab="overview"><span class="nav-icon">▦</span> Dashboard</button>
+        <button class="nav-item" data-tab="overview"><span class="nav-icon">▱</span> Investigações</button>
+        <button class="nav-item" data-tab="dns"><span class="nav-icon">⌕</span> OSINT Framework</button>
+        <button class="nav-item" data-tab="overview"><span class="nav-icon">⌘</span> Mapa de infraestrutura</button>
+        <button class="nav-item" data-tab="certs"><span class="nav-icon">◉</span> Certificados</button>
+        <button class="nav-item" data-tab="dns"><span class="nav-icon">▤</span> Registros DNS</button>
+        <button class="nav-item" data-tab="notes"><span class="nav-icon">▧</span> Relatórios e notas <span class="nav-count" id="noteCount">0</span></button>
+      </nav>
+      <div class="side-label tools-label">DATA SOURCES</div>
+      <div class="source-links">
+        <a href="https://rdap.org/" target="_blank" rel="noreferrer"><span>RDAP</span><b>↗</b></a>
+        <a href="https://crt.sh/" target="_blank" rel="noreferrer"><span>Certificate Transparency</span><b>↗</b></a>
+        <a href="https://cloudflare-dns.com/" target="_blank" rel="noreferrer"><span>Public DNS</span><b>↗</b></a>
+        <a href="https://ipwho.is/" target="_blank" rel="noreferrer"><span>IP Network Data</span><b>↗</b></a>
+      </div>
+      <div class="sidebar-bottom"><span class="status-dot"></span><div><b>Analyst Workspace</b><small>Passive session</small></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-title"><h1 id="crumbCurrent">Dashboard Overview</h1><p>Coleta de inteligência pública e análise de infraestrutura</p></div>
+        <form id="searchForm" class="search-form" role="search">
+          <span class="search-symbol">⌕</span>
+          <input id="targetInput" autocomplete="off" spellcheck="false" placeholder="Buscar domínio, IP ou URL..." aria-label="Domínio, IP ou URL">
+          <button id="searchBtn" type="submit"><span>ANALISAR</span><b>→</b></button>
+        </form>
+        <div class="top-actions"><span class="status-pill"><i></i> Fontes públicas</span><button class="icon-button" id="exportBtn" title="Exportar relatório" aria-label="Exportar relatório">⇩</button></div>
+      </header>
+
+      <section class="page-heading">
+        <div><div class="eyebrow">TRACE / INTELLIGENCE CENTER</div><h2>Visão geral</h2><p>Acompanhe consultas, registros e fontes de inteligência em um só lugar.</p></div>
+        <div class="heading-chip"><span class="pulse"></span> MODO PASSIVO</div>
+      </section>
+
+      <div id="alertBox" class="alert hidden" role="status"></div>
+
+      <section class="target-strip" id="targetStrip">
+        <div class="target-main"><span class="target-icon">◎</span><div><small>ALVO SELECIONADO</small><b id="targetName">Nenhum alvo selecionado</b></div></div>
+        <div class="target-meta"><span id="targetType">AGUARDANDO CONSULTA</span><span id="targetTime">—</span></div>
+      </section>
+
+      <section class="stats-grid" id="statsGrid">
+        <article class="stat-card"><div class="stat-top"><span>CONSULTAS NA SESSÃO</span><i class="blue">◎</i></div><strong id="statRuns">0</strong><small>Investigações iniciadas</small></article>
+        <article class="stat-card"><div class="stat-top"><span>REGISTROS DNS</span><i class="green">▤</i></div><strong id="statDns">—</strong><small>Respostas encontradas</small></article>
+        <article class="stat-card"><div class="stat-top"><span>CERTIFICADOS</span><i class="purple">◈</i></div><strong id="statCerts">—</strong><small>Entradas públicas</small></article>
+        <article class="stat-card"><div class="stat-top"><span>STATUS RDAP</span><i class="red">◉</i></div><strong id="statRdap">—</strong><small id="rdapSub">Aguardando consulta</small></article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel-card activity-panel">
+          <div class="panel-heading"><div><h2>◌ Atividade recente</h2><p>Últimas consultas realizadas nesta sessão</p></div><span class="subtle-tag">LIVE SESSION</span></div>
+          <div id="historyList" class="history-list"><div class="activity-empty"><span>◷</span><b>Nenhuma atividade ainda</b><small>As consultas realizadas aparecerão aqui.</small></div></div>
+          <button class="outline-button" type="button" data-tab="overview" onclick="document.getElementById('targetInput').focus()">Nova consulta</button>
+        </article>
+        <article class="panel-card sources-panel">
+          <div class="panel-heading"><div><h2>◎ Fontes de dados</h2><p>Serviços públicos utilizados pelo TRACE</p></div></div>
+          <div class="source-status-list">
+            <div class="source-status"><span class="source-led"></span><div><b>Cloudflare DNS</b><small>Resolução DNS-over-HTTPS</small></div><em>API</em></div>
+            <div class="source-status"><span class="source-led"></span><div><b>RDAP</b><small>Dados de registro público</small></div><em>API</em></div>
+            <div class="source-status"><span class="source-led"></span><div><b>crt.sh</b><small>Certificate Transparency</small></div><em>API</em></div>
+            <div class="source-status"><span class="source-led"></span><div><b>ipwho.is</b><small>Metadados de rede e ASN</small></div><em>API</em></div>
+          </div>
+          <p class="source-note">A disponibilidade é verificada durante cada consulta. Os indicadores não representam monitoramento em tempo real.</p>
+          <a class="outline-button source-button" href="https://www.cloudflare.com/learning/dns/what-is-dns/" target="_blank" rel="noreferrer">Sobre as fontes de dados ↗</a>
+        </article>
+      </section>
+
+      <div class="tabs-row">
+        <button class="tab-button active" data-tab="overview">Resumo</button>
+        <button class="tab-button" data-tab="dns">Registros DNS</button>
+        <button class="tab-button" data-tab="certs">Certificados</button>
+        <button class="tab-button" data-tab="notes">Anotações</button>
+      </div>
+
+      <section class="tab-panel active" id="panel-overview">
+        <div class="content-grid">
+          <article class="panel-card wide"><div class="panel-heading"><div><span class="panel-kicker">01 / VISÃO GERAL</span><h2>Resumo da infraestrutura</h2></div><span class="subtle-tag" id="overviewStatus">SEM DADOS</span></div><div id="overviewContent" class="empty-state"><span class="empty-icon">⌕</span><b>Aguardando uma consulta</b><p>Digite um domínio ou IP na barra superior para reunir informações públicas.</p></div></article>
+          <article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">02 / REGISTRO</span><h2>Dados RDAP</h2></div></div><div id="rdapSummary" class="compact-empty">Nenhum registro carregado.</div></article>
+        </div>
+      </section>
+      <section class="tab-panel" id="panel-dns"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">DNS / RECORDS</span><h2>Registros encontrados</h2><p>Respostas obtidas por DNS-over-HTTPS.</p></div><span class="subtle-tag" id="dnsCount">0 REGISTROS</span></div><div id="dnsResults" class="table-wrap"><div class="empty-state compact"><b>Sem dados DNS</b><p>Faça uma consulta de domínio para carregar os registros.</p></div></div></article></section>
+      <section class="tab-panel" id="panel-certs"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">CERTIFICATE TRANSPARENCY</span><h2>Certificados públicos</h2><p>Entradas públicas relacionadas ao domínio consultado.</p></div><span class="subtle-tag" id="certCount">0 ENTRADAS</span></div><div id="certResults" class="cert-list"><div class="empty-state compact"><b>Sem certificados</b><p>Faça uma consulta de domínio para buscar entradas públicas.</p></div></div></article></section>
+      <section class="tab-panel" id="panel-notes"><article class="panel-card"><div class="panel-heading"><div><span class="panel-kicker">CASE NOTES</span><h2>Caderno de investigação</h2><p>Anotações salvas somente neste navegador.</p></div></div><form id="noteForm" class="note-form"><input id="noteTitle" maxlength="80" placeholder="Título da anotação" required><textarea id="noteBody" maxlength="2000" placeholder="Registre observações, hipóteses e fontes..." required></textarea><button type="submit" class="primary-button">＋ SALVAR ANOTAÇÃO</button></form><div id="notesList" class="notes-list"></div></article></section>
+      <footer class="app-footer"><span>TRACE INTELLIGENCE PLATFORM <b>·</b> BUILD 2.0</span><span>Dados públicos · Consultas passivas · Sem varredura ativa</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
