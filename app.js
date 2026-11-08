@@ -254,7 +254,7 @@ function renderInfrastructure() {
     </div>`;
 }
 function switchView(view) {
-  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", graph:"Investigation Graph", domainintel:"Domain Intelligence", threatintel:"Threat Intelligence", timeline:"Timeline", confidence:"Confidence Score", evidence:"Evidence Center", nametracker:"Name Tracker", emailtracker:"Email Tracker", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
+  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", graph:"Investigation Graph", domainintel:"Domain Intelligence", threatintel:"Threat Intelligence", timeline:"Timeline", confidence:"Confidence Score", evidence:"Evidence Center", nametracker:"Name Tracker", emailtracker:"Email Tracker", geoint:"GEOINT / Image Analysis", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
   document.body.dataset.view = view;
   document.querySelectorAll(".nav-item[data-nav]").forEach(button => {
     const active = button.dataset.nav === view;
@@ -379,6 +379,41 @@ function exportReport() {
   a.click(); URL.revokeObjectURL(url); showToast("Relatório JSON exportado.");
 }
 
+
+
+let geointObjectUrl = null;
+function handleGeointImage(file) {
+  const preview=$("#geointPreview");
+  if(geointObjectUrl){URL.revokeObjectURL(geointObjectUrl);geointObjectUrl=null;}
+  if(!file){preview.innerHTML='<div class="compact-empty">A prévia da imagem aparecerá aqui.</div>';return;}
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>12*1024*1024){
+    preview.innerHTML='<div class="tracker-error">Escolha uma imagem JPG, PNG ou WebP de até 12 MB.</div>';return;
+  }
+  geointObjectUrl=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{preview.innerHTML='<img class="geoint-image" src="'+geointObjectUrl+'" alt="Prévia local da imagem selecionada"><div class="geoint-image-meta"><b>'+escapeHtml(file.name)+'</b><small>'+img.naturalWidth+' × '+img.naturalHeight+' px · '+(file.size/1024/1024).toFixed(2)+' MB</small></div>';};
+  img.onerror=()=>{preview.innerHTML='<div class="tracker-error">Não foi possível abrir esta imagem.</div>';};
+  img.src=geointObjectUrl;
+}
+function renderGeointSearch(clues) {
+  const el=$("#geointResults");if(!el)return;
+  const q=encodeURIComponent(clues.trim());
+  const links=[
+    ["OpenStreetMap / Wiki","Pesquisar referências geográficas e pontos de interesse.","https://www.google.com/search?q="+q+"+site%3Aopenstreetmap.org+OR+site%3Awikidata.org"],
+    ["Google Maps","Comparar nomes de locais e pontos de referência públicos.","https://www.google.com/maps/search/"+q],
+    ["Pesquisa de imagens públicas","Buscar imagens públicas semelhantes para comparação manual.","https://www.google.com/search?tbm=isch&q="+q]
+  ];
+  el.innerHTML='<div class="tracker-result-summary"><b>Pesquisa preparada</b><small>Compare resultados com mais de uma pista independente. Uma semelhança visual isolada não confirma um local.</small></div>'+links.map(x=>'<a class="tracker-source-link" href="'+x[2]+'" target="_blank" rel="noopener noreferrer"><span><b>'+x[0]+'</b><small>'+x[1]+'</small></span><em>ABRIR ↗</em></a>').join("");
+}
+$("#geointImage")?.addEventListener("change",event=>handleGeointImage(event.target.files?.[0]));
+$("#geointForm")?.addEventListener("submit",event=>{
+  event.preventDefault();
+  const clues=$("#geointClues").value.trim();
+  if(clues.length<8){showToast("Adicione mais detalhes visuais para pesquisar.");return;}
+  renderGeointSearch(clues);
+  addTimeline("Pesquisa GEOINT preparada","Análise manual de pistas visuais de local público");
+  showToast("Pesquisas de referência preparadas.");
+});
 
 function renderNameTracker(name) {
   const el = $("#nameTrackerResults");
