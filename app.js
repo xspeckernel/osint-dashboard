@@ -200,26 +200,50 @@ function renderInvestigations() {
 function renderInfrastructure() {
   const el = $("#infrastructureContent");
   if (!el) return;
-  if (!state.target) {
-    $("#infraStatus").textContent = "AGUARDANDO ALVO";
-    el.innerHTML = '<div class="empty-state compact"><b>Nenhuma infraestrutura mapeada</b><p>Consulte um domínio para visualizar seus registros DNS e dados de registro.</p></div>';
+  if (!state.target || state.target.type !== "IP") {
+    $("#infraStatus").textContent = state.target ? "ALVO NÃO É IP" : "AGUARDANDO ALVO";
+    el.innerHTML = '<div class="infra-empty panel-card"><b>Informe um endereço IP</b><p>Este painel mostra geolocalização aproximada e informações de rede para alvos IP.</p></div>';
     return;
   }
-  $("#infraStatus").textContent = "DADOS DA CONSULTA";
-  const dnsAnswers = state.dns.flatMap(r => (r.Answer || []).map(a => ({type:r.typeName || r.qtype, data:a.data})));
-  const ns = dnsAnswers.filter(x => x.type === "NS").slice(0,6);
-  const mx = dnsAnswers.filter(x => x.type === "MX").slice(0,6);
-  const addr = dnsAnswers.filter(x => x.type === "A" || x.type === "AAAA").slice(0,8);
-  const ip = state.ipInfo?.connection?.org || state.ipInfo?.connection?.isp || "";
-  const node = (label, value, detail="") => `<div class="infra-node"><small>${escapeHtml(label)}</small><b>${escapeHtml(value || "Não encontrado")}</b>${detail ? `<p>${escapeHtml(detail)}</p>` : ""}</div>`;
-  el.innerHTML = `<div class="infra-root"><small>ALVO ANALISADO</small><b>${escapeHtml(state.target.value)}</b></div>
-    <div class="infra-branch">
-      ${node("ENDEREÇOS IP", addr.map(x=>x.data).join(" · "), addr.length+" resposta(s) DNS")}
-      ${node("NAMESERVERS", ns.map(x=>x.data).join(" · "), ns.length+" resposta(s) DNS")}
-      ${node("MAIL EXCHANGERS", mx.map(x=>x.data).join(" · "), mx.length+" resposta(s) DNS")}
-      ${node("REGISTRO RDAP", state.rdap?.handle || (state.rdap ? "Consulta recebida" : "Sem resposta"))}
-      ${node("ORGANIZAÇÃO / ASN", ip || (state.ipInfo?.connection?.asn ? "AS"+state.ipInfo.connection.asn : ""), state.ipInfo?.country_code || "")}
-      ${node("CERTIFICADOS", String(state.certs.length), "Entrada(s) públicas encontradas")}
+  const info=state.ipInfo||{}, loc=info.city||"Cidade não disponível", region=info.region||"Região não disponível", country=info.country||"País não disponível";
+  const conn=info.connection||{}, timezone=info.timezone||{}, flag=info.flag?.emoji||"🌐";
+  const lat=Number(info.latitude), lon=Number(info.longitude), hasCoords=Number.isFinite(lat)&&Number.isFinite(lon)&&(lat!==0||lon!==0);
+  const coords=hasCoords?lat.toFixed(3)+", "+lon.toFixed(3):"Não disponível";
+  const asn=conn.asn?"AS"+String(conn.asn).replace(/^AS/i,""):"Não disponível";
+  const org=conn.org||conn.isp||"Não disponível", rdapNet=state.rdap?.handle||state.rdap?.name||"Não disponível";
+  const mapUrl=hasCoords?"https://www.openstreetmap.org/?mlat="+encodeURIComponent(lat)+"&mlon="+encodeURIComponent(lon)+"#map=9/"+encodeURIComponent(lat)+"/"+encodeURIComponent(lon):"";
+  const graph=`<svg viewBox="0 0 700 365" role="img" aria-label="Diagrama ilustrativo de metadados públicos do IP">
+    <path class="edge" d="M350 182 L145 75 M350 182 L555 75 M350 182 L145 290 M350 182 L555 290"/>
+    <circle cx="350" cy="182" r="47" fill="#123849" stroke="#55e2eb" stroke-width="2" style="filter:drop-shadow(0 0 13px #29d7e788)"/>
+    <text x="350" y="178" class="node-label">${escapeHtml(state.target.value)}</text><text x="350" y="195" class="node-sub">IP ANALISADO</text>
+    <g><circle class="node-ring" cx="145" cy="75" r="25"/><text x="145" y="79" class="node-label">GEO</text><text x="145" y="116" class="node-sub">${escapeHtml(loc.slice(0,20))}</text></g>
+    <g><circle class="node-ring purple" cx="555" cy="75" r="25"/><text x="555" y="79" class="node-label">ASN</text><text x="555" y="116" class="node-sub">${escapeHtml(asn)}</text></g>
+    <g><circle class="node-ring" cx="145" cy="290" r="25"/><text x="145" y="294" class="node-label">ISP</text><text x="145" y="331" class="node-sub">${escapeHtml((conn.isp||"Provedor").slice(0,22))}</text></g>
+    <g><circle class="node-ring purple" cx="555" cy="290" r="25"/><text x="555" y="294" class="node-label">RDAP</text><text x="555" y="331" class="node-sub">${escapeHtml(rdapNet.slice(0,22))}</text></g>
+  </svg>`;
+  $("#infraStatus").textContent=state.ipInfo?"METADADOS CARREGADOS":"DADOS PARCIAIS";
+  el.innerHTML=`
+    <div class="infra-topology-card"><div class="infra-card-head"><div><h3>TOPOLOGIA DE REDE</h3><small>RELAÇÕES A PARTIR DE METADADOS PÚBLICOS</small></div><span class="infra-live">CONSULTA CONCLUÍDA</span></div><div class="infra-topology">${graph}</div></div>
+    <div class="infra-side-stack">
+      <article class="infra-side-card"><div class="infra-card-head"><div><h3>LOCALIZAÇÃO APROXIMADA</h3><small>GEOIP / BASE PÚBLICA</small></div><span class="infra-live">IP</span></div>
+        <div class="infra-location"><div class="infra-country-line"><span class="infra-flag">${escapeHtml(flag)}</span><div><div class="infra-city">${escapeHtml(loc)}</div><div class="infra-region">${escapeHtml(region)} · ${escapeHtml(country)}</div></div></div>
+          <div class="infra-location-grid"><div class="infra-mini"><small>COORDENADAS APROX.</small><b>${escapeHtml(coords)}</b></div><div class="infra-mini"><small>FUSO HORÁRIO</small><b>${escapeHtml(timezone.id||timezone.utc||"Não disponível")}</b></div></div>
+        </div>${mapUrl?`<a class="infra-map-link" href="${mapUrl}" target="_blank" rel="noopener noreferrer">VER REGIÃO NO OPENSTREETMAP ↗</a>`:""}
+      </article>
+      <article class="infra-side-card"><div class="infra-card-head"><div><h3>PROVEDOR E REGISTRO</h3><small>ASN / RDAP</small></div></div><div class="infra-details">
+        <div class="infra-detail"><small>ORGANIZAÇÃO</small><b>${escapeHtml(org)}</b></div>
+        <div class="infra-detail"><small>ASN</small><b>${escapeHtml(asn)}</b></div>
+        <div class="infra-detail"><small>PROVEDOR / ISP</small><b>${escapeHtml(conn.isp||"Não disponível")}</b></div>
+        <div class="infra-detail"><small>DOMÍNIO DO PROVEDOR</small><b>${escapeHtml(conn.domain||"Não disponível")}</b></div>
+        <div class="infra-detail"><small>TIPO DE CONEXÃO</small><b>${escapeHtml(conn.type||"Não disponível")}</b></div>
+        <div class="infra-detail"><small>REDE / REGISTRO</small><b>${escapeHtml(rdapNet)}</b></div>
+      </div></article>
+    </div>
+    <div class="infra-kpis">
+      <div class="infra-kpi"><small>ENDEREÇO IP</small><b>${escapeHtml(state.target.value)}</b></div>
+      <div class="infra-kpi"><small>PAÍS / CÓDIGO</small><b>${escapeHtml(country)} (${escapeHtml(info.country_code||"—")})</b></div>
+      <div class="infra-kpi"><small>CONTINENTE</small><b>${escapeHtml(info.continent||"Não disponível")}</b></div>
+      <div class="infra-kpi"><small>MOEDA LOCAL</small><b>${escapeHtml(info.currency?.code||"Não disponível")}</b></div>
     </div>`;
 }
 function switchView(view) {
@@ -258,6 +282,9 @@ function exportReport() {
     certificates: state.certs,
     ip_network_metadata: state.ipInfo ? {
       country_code: state.ipInfo.country_code,
+      city: state.ipInfo.city, region: state.ipInfo.region, country: state.ipInfo.country,
+      latitude: state.ipInfo.latitude, longitude: state.ipInfo.longitude,
+      timezone: state.ipInfo.timezone, continent: state.ipInfo.continent,
       connection: state.ipInfo.connection ? {
         asn: state.ipInfo.connection.asn, org: state.ipInfo.connection.org,
         isp: state.ipInfo.connection.isp, type: state.ipInfo.connection.type
