@@ -190,12 +190,48 @@ async function runAnalysis(raw) {
     showToast("Consulta finalizada.");
   }
 }
-function switchTab(tab) {
-  document.querySelectorAll("[data-tab]").forEach(button => button.classList.toggle("active", button.dataset.tab === tab));
-  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === `panel-${tab}`));
-  const names = { overview: "Visão geral", dns: "Registros DNS", certs: "Certificados", notes: "Anotações" };
-  $("#crumbCurrent").textContent = names[tab] || tab;
+function renderInvestigations() {
+  const el = $("#investigationsContent");
+  if (!el) return;
+  el.innerHTML = state.history.length ? state.history.map(item =>
+    `<div class="history-item"><b>${escapeHtml(item.target)}</b><small>${item.type} · ${item.at.toLocaleString("pt-BR")}</small></div>`
+  ).join("") : '<div class="activity-empty"><b>Nenhuma investigação ainda</b><small>Faça uma consulta na barra superior para começar.</small></div>';
 }
+function renderInfrastructure() {
+  const el = $("#infrastructureContent");
+  if (!el) return;
+  if (!state.target) {
+    $("#infraStatus").textContent = "AGUARDANDO ALVO";
+    el.innerHTML = '<div class="empty-state compact"><b>Nenhuma infraestrutura mapeada</b><p>Consulte um domínio para visualizar seus registros DNS e dados de registro.</p></div>';
+    return;
+  }
+  $("#infraStatus").textContent = "DADOS DA CONSULTA";
+  const dnsAnswers = state.dns.flatMap(r => (r.Answer || []).map(a => ({type:r.typeName || r.qtype, data:a.data})));
+  const ns = dnsAnswers.filter(x => x.type === "NS").slice(0,6);
+  const mx = dnsAnswers.filter(x => x.type === "MX").slice(0,6);
+  const addr = dnsAnswers.filter(x => x.type === "A" || x.type === "AAAA").slice(0,8);
+  const ip = state.ipInfo?.connection?.org || state.ipInfo?.connection?.isp || "";
+  const node = (label, value, detail="") => `<div class="infra-node"><small>${escapeHtml(label)}</small><b>${escapeHtml(value || "Não encontrado")}</b>${detail ? `<p>${escapeHtml(detail)}</p>` : ""}</div>`;
+  el.innerHTML = `<div class="infra-root"><small>ALVO ANALISADO</small><b>${escapeHtml(state.target.value)}</b></div>
+    <div class="infra-branch">
+      ${node("ENDEREÇOS IP", addr.map(x=>x.data).join(" · "), addr.length+" resposta(s) DNS")}
+      ${node("NAMESERVERS", ns.map(x=>x.data).join(" · "), ns.length+" resposta(s) DNS")}
+      ${node("MAIL EXCHANGERS", mx.map(x=>x.data).join(" · "), mx.length+" resposta(s) DNS")}
+      ${node("REGISTRO RDAP", state.rdap?.handle || (state.rdap ? "Consulta recebida" : "Sem resposta"))}
+      ${node("ORGANIZAÇÃO / ASN", ip || (state.ipInfo?.connection?.asn ? "AS"+state.ipInfo.connection.asn : ""), state.ipInfo?.country_code || "")}
+      ${node("CERTIFICADOS", String(state.certs.length), "Entrada(s) públicas encontradas")}
+    </div>`;
+}
+function switchView(view) {
+  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
+  document.querySelectorAll(".nav-item[data-nav]").forEach(button => button.classList.toggle("active", button.dataset.nav === view));
+  document.querySelectorAll(".tab-button[data-tab]").forEach(button => button.classList.toggle("active", button.dataset.tab === view));
+  document.querySelectorAll(".tab-panel, .module-panel").forEach(panel => panel.classList.toggle("active", panel.id === `panel-${view}`));
+  $("#crumbCurrent").textContent = names[view] || "TRACE";
+  if (view === "investigations") renderInvestigations();
+  if (view === "infrastructure") renderInfrastructure();
+}
+function switchTab(tab) { switchView(tab); }
 function saveNotes() {
   localStorage.setItem("trace_notes", JSON.stringify(state.notes));
   $("#noteCount").textContent = state.notes.length;
@@ -232,7 +268,10 @@ function exportReport() {
 $("#searchForm").addEventListener("submit", event => {
   event.preventDefault(); runAnalysis($("#targetInput").value);
 });
-document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
+document.querySelectorAll("[data-nav]").forEach(button => button.addEventListener("click", () => switchView(button.dataset.nav)));
+document.querySelectorAll(".tab-button[data-tab]").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
+$("#newInvestigationBtn")?.addEventListener("click", () => { switchView("overview"); $("#targetInput").focus(); });
+
 $("#noteForm").addEventListener("submit", event => {
   event.preventDefault();
   state.notes.unshift({ id: crypto.randomUUID(), title: $("#noteTitle").value.trim(), body: $("#noteBody").value.trim(), date: new Date().toLocaleString("pt-BR") });
@@ -245,4 +284,4 @@ $("#notesList").addEventListener("click", event => {
   saveNotes(); renderNotes(); showToast("Anotação excluída.");
 });
 $("#exportBtn").addEventListener("click", exportReport);
-renderNotes(); renderHistory(); updateTargetHeader();
+renderNotes(); renderHistory(); updateTargetHeader(); renderInvestigations(); renderInfrastructure(); switchView("overview");
