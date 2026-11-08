@@ -254,7 +254,7 @@ function renderInfrastructure() {
     </div>`;
 }
 function switchView(view) {
-  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", graph:"Investigation Graph", domainintel:"Domain Intelligence", threatintel:"Threat Intelligence", timeline:"Timeline", confidence:"Confidence Score", evidence:"Evidence Center", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
+  const names = { overview:"Dashboard Overview", investigations:"Investigações", framework:"OSINT Framework", infrastructure:"Mapa de infraestrutura", graph:"Investigation Graph", domainintel:"Domain Intelligence", threatintel:"Threat Intelligence", timeline:"Timeline", confidence:"Confidence Score", evidence:"Evidence Center", nametracker:"Name Tracker", emailtracker:"Email Tracker", dns:"Registros DNS", certs:"Certificados", notes:"Relatórios e notas" };
   document.body.dataset.view = view;
   document.querySelectorAll(".nav-item[data-nav]").forEach(button => {
     const active = button.dataset.nav === view;
